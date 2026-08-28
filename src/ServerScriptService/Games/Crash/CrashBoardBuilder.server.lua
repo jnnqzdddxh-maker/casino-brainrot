@@ -244,6 +244,8 @@ local function onMarkerFound(marker)
 	buildBoardAt(cframe)
 end
 
+UIBuilder.rebuildExistingBoards("CrashBoard", BOARD_SIZE.Y / 2, buildBoardAt)
+
 for _, descendant in Workspace:GetDescendants() do
 	if descendant.Name == SPAWN_MARKER_NAME then
 		onMarkerFound(descendant)

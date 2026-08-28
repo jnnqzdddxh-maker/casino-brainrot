@@ -1,4 +1,24 @@
+local Workspace = game:GetService("Workspace")
+
 local UIBuilder = {}
+
+-- Destroys any already-built board/cabinet of this name and rebuilds it in
+-- place from the current code. Called on every server start so an already-
+-- built game always picks up the latest changes, instead of only rebuilding
+-- when a fresh spawn marker Part appears (which only exists once, before
+-- the first build consumes it).
+function UIBuilder.rebuildExistingBoards(modelName, offsetY, buildFn)
+	for _, descendant in Workspace:GetChildren() do
+		if descendant.Name == modelName and descendant:IsA("Model") then
+			local body = descendant.PrimaryPart or descendant:FindFirstChild("Body")
+			local markerCFrame = body and (body.CFrame * CFrame.new(0, -offsetY, 0))
+			descendant:Destroy()
+			if markerCFrame then
+				buildFn(markerCFrame)
+			end
+		end
+	end
+end
 
 function UIBuilder.create(className, props)
 	local instance = Instance.new(className)

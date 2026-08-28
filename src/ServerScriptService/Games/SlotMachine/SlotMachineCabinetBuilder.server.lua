@@ -268,6 +268,8 @@ local function onMarkerFound(marker)
 	buildCabinetAt(cframe)
 end
 
+UIBuilder.rebuildExistingBoards("SlotMachineCabinet", CABINET_SIZE.Y / 2, buildCabinetAt)
+
 for _, descendant in Workspace:GetDescendants() do
 	if descendant.Name == SPAWN_MARKER_NAME then
 		onMarkerFound(descendant)
