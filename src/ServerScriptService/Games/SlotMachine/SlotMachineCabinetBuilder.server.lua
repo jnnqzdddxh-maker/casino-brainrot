@@ -15,7 +15,7 @@ local TEXT_COLOR = Color3.fromRGB(233, 236, 244)
 local MUTED_COLOR = Color3.fromRGB(139, 147, 167)
 
 local CABINET_SIZE = Vector3.new(5, 10, 2.5)
-local CANVAS_SIZE = Vector2.new(460, 920)
+local CANVAS_SIZE = Vector2.new(500, 950)
 local CELL_SIZE = 100
 local CELL_GAP = 8
 
@@ -174,7 +174,7 @@ local function buildScreenPanel(screenPart)
 	local betRow = create("Frame", {
 		Name = "BetRow",
 		LayoutOrder = 5,
-		Size = UDim2.new(0, 300, 0, 56),
+		Size = UDim2.new(0, 420, 0, 56),
 		BackgroundTransparency = 1,
 		Parent = panel,
 	})
@@ -207,12 +207,13 @@ local function buildScreenPanel(screenPart)
 		return button
 	end
 
-	betButton("Minus", "-", 1)
+	betButton("MinBet", "MIN", 1)
+	betButton("Minus", "-", 2)
 
 	create("TextLabel", {
 		Name = "BetLabel",
-		LayoutOrder = 2,
-		Size = UDim2.new(0, 150, 0, 56),
+		LayoutOrder = 3,
+		Size = UDim2.new(0, 140, 0, 56),
 		BackgroundTransparency = 1,
 		Font = Enum.Font.GothamBold,
 		Text = "Mise : " .. SlotMachineConfig.MinBet,
@@ -221,7 +222,8 @@ local function buildScreenPanel(screenPart)
 		Parent = betRow,
 	})
 
-	betButton("Plus", "+", 3)
+	betButton("Plus", "+", 4)
+	betButton("MaxBet", "MAX", 5)
 
 	local spinButton = create("TextButton", {
 		Name = "SpinButton",

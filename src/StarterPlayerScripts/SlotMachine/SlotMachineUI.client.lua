@@ -111,9 +111,11 @@ local function setupCabinet(cabinetModel)
 
 	local balanceLabel = panel:WaitForChild("Balance")
 	local betRow = panel:WaitForChild("BetRow")
+	local minBetButton = betRow:WaitForChild("MinBet")
 	local minusButton = betRow:WaitForChild("Minus")
 	local betLabel = betRow:WaitForChild("BetLabel")
 	local plusButton = betRow:WaitForChild("Plus")
+	local maxBetButton = betRow:WaitForChild("MaxBet")
 	local spinButton = panel:WaitForChild("SpinButton")
 	local resultLabel = panel:WaitForChild("Result")
 
@@ -128,6 +130,12 @@ local function setupCabinet(cabinetModel)
 		betLabel.Text = "Mise : " .. currentBet
 	end
 
+	minBetButton.MouseButton1Click:Connect(function()
+		playSound("ButtonClick")
+		currentBet = SlotMachineConfig.MinBet
+		refreshBetLabel()
+	end)
+
 	minusButton.MouseButton1Click:Connect(function()
 		playSound("ButtonClick")
 		currentBet = math.max(SlotMachineConfig.MinBet, currentBet - SlotMachineConfig.BetStep)
@@ -137,6 +145,12 @@ local function setupCabinet(cabinetModel)
 	plusButton.MouseButton1Click:Connect(function()
 		playSound("ButtonClick")
 		currentBet = math.min(SlotMachineConfig.MaxBet, currentBet + SlotMachineConfig.BetStep)
+		refreshBetLabel()
+	end)
+
+	maxBetButton.MouseButton1Click:Connect(function()
+		playSound("ButtonClick")
+		currentBet = SlotMachineConfig.MaxBet
 		refreshBetLabel()
 	end)
 
