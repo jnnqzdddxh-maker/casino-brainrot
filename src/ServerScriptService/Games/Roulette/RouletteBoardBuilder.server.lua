@@ -12,12 +12,13 @@ local addStroke = UIBuilder.addStroke
 -- "RouletteSpawn" (position/rotation define where the board appears).
 local SPAWN_MARKER_NAME = "RouletteSpawn"
 
--- Classic casino colors: green felt, true red/black pockets, gold trim.
+-- Dark background matching the rest of the casino (slots, Crash), with true
+-- red/black chip colors and gold trim.
 local TRIM_COLOR = Theme.Trim
 local TEXT_COLOR = Theme.Text
 local MUTED_COLOR = Theme.Muted
-local BODY_COLOR = Color3.fromRGB(19, 46, 32)
-local SCREEN_COLOR = Color3.fromRGB(12, 30, 21)
+local BODY_COLOR = Theme.Body
+local SCREEN_COLOR = Theme.Screen
 local RED_COLOR = Color3.fromRGB(200, 30, 40)
 local BLACK_COLOR = Color3.fromRGB(42, 42, 46)
 local GREEN_COLOR = Color3.fromRGB(30, 130, 75)

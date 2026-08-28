@@ -15,13 +15,13 @@ local addStroke = UIBuilder.addStroke
 -- wheel display, instead of being buried in a table you have to stand over.
 local SPAWN_MARKER_NAME = "RouletteWheelSpawn"
 
--- Classic casino colors, matching RouletteBoardBuilder: green felt, true
--- red/black pockets, gold trim.
+-- Dark background matching the rest of the casino (slots, Crash), with true
+-- red/black wheel pockets and gold trim.
 local TRIM_COLOR = Theme.Trim
 local TEXT_COLOR = Theme.Text
 local MUTED_COLOR = Theme.Muted
-local BODY_COLOR = Color3.fromRGB(19, 46, 32)
-local SCREEN_COLOR = Color3.fromRGB(12, 30, 21)
+local BODY_COLOR = Theme.Body
+local SCREEN_COLOR = Theme.Screen
 local RED_COLOR = Color3.fromRGB(200, 30, 40)
 local BLACK_COLOR = Color3.fromRGB(42, 42, 46)
 local GREEN_COLOR = Color3.fromRGB(30, 130, 75)
@@ -107,19 +107,20 @@ local function buildScreenPanel(screenPart)
 		Parent = wheelFrame,
 	})
 
-	-- Segments reach almost all the way to the wheel's own edge (radius 380)
-	-- and are wide enough to overlap their neighbors, so the wheel reads as
-	-- one solid disc filling its circular frame — not a smaller disc with a
-	-- dark ring around it, and not a spiky pinwheel with gaps between
-	-- wedges. The wheel never rotates — only the ball does.
+	-- Uniform-width rectangles can never taper the way a true pie wedge
+	-- does, so at any width they'll show *some* ray/spoke quality up close.
+	-- The fix is to make that overlap so generous (roughly double the bare
+	-- minimum) that it's not visible at the distance/angle this is actually
+	-- viewed from, and to drop the dividers entirely rather than fight them.
+	-- The wheel never rotates — only the ball does.
 	local segmentAngle = 360 / #RouletteConfig.WheelOrder
-	local WHEEL_RADIUS = 376
+	local WHEEL_RADIUS = 378
 	for i, number in RouletteConfig.WheelOrder do
 		create("Frame", {
 			Name = "Segment" .. i,
 			AnchorPoint = Vector2.new(0.5, 1),
 			Position = UDim2.fromScale(0.5, 0.5),
-			Size = UDim2.new(0, 92, 0, WHEEL_RADIUS),
+			Size = UDim2.new(0, 150, 0, WHEEL_RADIUS),
 			Rotation = (i - 1) * segmentAngle,
 			BackgroundColor3 = numberColor(number),
 			BorderSizePixel = 0,
@@ -127,23 +128,8 @@ local function buildScreenPanel(screenPart)
 		})
 	end
 
-	-- Thin, subtle gold dividers at each pocket boundary — kept faint so the
-	-- colored wedges read as a solid disc rather than a gold sunburst — plus
-	-- the number printed on each pocket.
+	-- The number printed on each pocket, upright regardless of position.
 	for i, number in RouletteConfig.WheelOrder do
-		create("Frame", {
-			Name = "Divider" .. i,
-			AnchorPoint = Vector2.new(0.5, 1),
-			Position = UDim2.fromScale(0.5, 0.5),
-			Size = UDim2.new(0, 1, 0, WHEEL_RADIUS),
-			Rotation = (i - 1.5) * segmentAngle,
-			BackgroundColor3 = TRIM_COLOR,
-			BackgroundTransparency = 0.6,
-			BorderSizePixel = 0,
-			ZIndex = 2,
-			Parent = spinner,
-		})
-
 		local labelPivot = create("Frame", {
 			Name = "NumberPivot" .. i,
 			AnchorPoint = Vector2.new(0.5, 1),
