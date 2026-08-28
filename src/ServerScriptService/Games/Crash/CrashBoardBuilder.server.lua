@@ -2,6 +2,7 @@ local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local UIBuilder = require(ReplicatedStorage.Shared.UIBuilder)
+local CrashConfig = require(ReplicatedStorage.Shared.CrashConfig)
 local create = UIBuilder.create
 local addCorner = UIBuilder.addCorner
 local addStroke = UIBuilder.addStroke
@@ -18,25 +19,6 @@ local MUTED_COLOR = Color3.fromRGB(139, 147, 167)
 
 local BOARD_SIZE = Vector3.new(10, 7, 0.6)
 local CANVAS_SIZE = Vector2.new(900, 640)
-
-local function betButton(parent, name, text, layoutOrder)
-	local button = create("TextButton", {
-		Name = name,
-		LayoutOrder = layoutOrder,
-		Size = UDim2.new(0, 70, 0, 64),
-		BackgroundColor3 = SCREEN_COLOR,
-		BorderSizePixel = 0,
-		Font = Enum.Font.GothamBold,
-		Text = text,
-		TextColor3 = TRIM_COLOR,
-		TextScaled = true,
-		AutoButtonColor = true,
-		Parent = parent,
-	})
-	addCorner(button, 10)
-	addStroke(button, TRIM_COLOR, 0.6)
-	return button
-end
 
 local function buildScreenPanel(screenPart)
 	local surfaceGui = create("SurfaceGui", {
@@ -156,40 +138,7 @@ local function buildScreenPanel(screenPart)
 		Parent = historyRow,
 	})
 
-	local betRow = create("Frame", {
-		Name = "BetRow",
-		LayoutOrder = 5,
-		Size = UDim2.new(0, 520, 0, 64),
-		BackgroundTransparency = 1,
-		Parent = panel,
-	})
-
-	create("UIListLayout", {
-		FillDirection = Enum.FillDirection.Horizontal,
-		HorizontalAlignment = Enum.HorizontalAlignment.Center,
-		VerticalAlignment = Enum.VerticalAlignment.Center,
-		SortOrder = Enum.SortOrder.LayoutOrder,
-		Padding = UDim.new(0, 14),
-		Parent = betRow,
-	})
-
-	betButton(betRow, "MinBet", "MIN", 1)
-	betButton(betRow, "Minus", "-", 2)
-
-	create("TextLabel", {
-		Name = "BetLabel",
-		LayoutOrder = 3,
-		Size = UDim2.new(0, 160, 0, 64),
-		BackgroundTransparency = 1,
-		Font = Enum.Font.GothamBold,
-		Text = "Mise : 10",
-		TextColor3 = TEXT_COLOR,
-		TextScaled = true,
-		Parent = betRow,
-	})
-
-	betButton(betRow, "Plus", "+", 4)
-	betButton(betRow, "MaxBet", "MAX", 5)
+	UIBuilder.buildBetRow(panel, 5, CrashConfig.MinBet)
 
 	local actionButton = create("TextButton", {
 		Name = "ActionButton",

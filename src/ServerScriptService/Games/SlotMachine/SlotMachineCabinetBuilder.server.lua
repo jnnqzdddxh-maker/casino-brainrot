@@ -132,59 +132,7 @@ local function buildScreenPanel(screenPart)
 		Parent = panel,
 	})
 
-	local betRow = create("Frame", {
-		Name = "BetRow",
-		LayoutOrder = 5,
-		Size = UDim2.new(0, 420, 0, 56),
-		BackgroundTransparency = 1,
-		Parent = panel,
-	})
-
-	create("UIListLayout", {
-		FillDirection = Enum.FillDirection.Horizontal,
-		HorizontalAlignment = Enum.HorizontalAlignment.Center,
-		VerticalAlignment = Enum.VerticalAlignment.Center,
-		SortOrder = Enum.SortOrder.LayoutOrder,
-		Padding = UDim.new(0, 14),
-		Parent = betRow,
-	})
-
-	local function betButton(name, text, layoutOrder)
-		local button = create("TextButton", {
-			Name = name,
-			LayoutOrder = layoutOrder,
-			Size = UDim2.new(0, 56, 0, 56),
-			BackgroundColor3 = SCREEN_COLOR,
-			BorderSizePixel = 0,
-			Font = Enum.Font.GothamBold,
-			Text = text,
-			TextColor3 = TRIM_COLOR,
-			TextScaled = true,
-			AutoButtonColor = true,
-			Parent = betRow,
-		})
-		addCorner(button, 10)
-		addStroke(button, TRIM_COLOR, 0.6)
-		return button
-	end
-
-	betButton("MinBet", "MIN", 1)
-	betButton("Minus", "-", 2)
-
-	create("TextLabel", {
-		Name = "BetLabel",
-		LayoutOrder = 3,
-		Size = UDim2.new(0, 140, 0, 56),
-		BackgroundTransparency = 1,
-		Font = Enum.Font.GothamBold,
-		Text = "Mise : " .. SlotMachineConfig.MinBet,
-		TextColor3 = TEXT_COLOR,
-		TextScaled = true,
-		Parent = betRow,
-	})
-
-	betButton("Plus", "+", 4)
-	betButton("MaxBet", "MAX", 5)
+	UIBuilder.buildBetRow(panel, 5, SlotMachineConfig.MinBet)
 
 	local spinButton = create("TextButton", {
 		Name = "SpinButton",

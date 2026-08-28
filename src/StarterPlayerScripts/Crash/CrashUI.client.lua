@@ -52,13 +52,16 @@ end)
 
 -- Graph: the curve is drawn as short rotated line segments connecting each
 -- new point to the previous one, with the rocket riding the leading edge.
+-- Both axes use an asymptotic curve (elapsed / (elapsed + halflife)) instead
+-- of a linear ramp clamped at 1 — it keeps bending smoothly toward the edges
+-- without ever slamming flat against them, however long the round runs.
 local GRAPH_MARGIN = 20
-local GRAPH_MAX_TIME = 15 -- seconds of flight to reach the graph's right edge
-local GRAPH_MAX_MULTIPLIER = 10 -- multiplier (log scale) to reach the top edge
+local GRAPH_TIME_HALFLIFE_X = 10 -- seconds of flight to reach the horizontal midpoint
+local GRAPH_TIME_HALFLIFE_Y = 6 -- seconds of flight to reach the vertical midpoint
 
-local function computeGraphPoint(elapsed, multiplier, graphWidth, graphHeight)
-	local xFraction = math.clamp(elapsed / GRAPH_MAX_TIME, 0, 1)
-	local yFraction = math.clamp(math.log(multiplier) / math.log(GRAPH_MAX_MULTIPLIER), 0, 1)
+local function computeGraphPoint(elapsed, graphWidth, graphHeight)
+	local xFraction = elapsed / (elapsed + GRAPH_TIME_HALFLIFE_X)
+	local yFraction = elapsed / (elapsed + GRAPH_TIME_HALFLIFE_Y)
 
 	local x = GRAPH_MARGIN + xFraction * (graphWidth - GRAPH_MARGIN * 2)
 	local y = (graphHeight - GRAPH_MARGIN) - yFraction * (graphHeight - GRAPH_MARGIN * 2)
@@ -140,11 +143,16 @@ local function setupBoard(boardModel)
 	local statusLabel = panel:WaitForChild("StatusLabel")
 	local historyRow = panel:WaitForChild("HistoryRow")
 	local betRow = panel:WaitForChild("BetRow")
-	local minBetButton = betRow:WaitForChild("MinBet")
-	local minusButton = betRow:WaitForChild("Minus")
-	local betLabel = betRow:WaitForChild("BetLabel")
-	local plusButton = betRow:WaitForChild("Plus")
-	local maxBetButton = betRow:WaitForChild("MaxBet")
+	local quickRow = betRow:WaitForChild("QuickRow")
+	local stepRow = betRow:WaitForChild("StepRow")
+	local minBetButton = quickRow:WaitForChild("MinBet")
+	local quarterButton = quickRow:WaitForChild("Quarter")
+	local halfButton = quickRow:WaitForChild("Half")
+	local threeQuarterButton = quickRow:WaitForChild("ThreeQuarter")
+	local maxBetButton = quickRow:WaitForChild("MaxBet")
+	local minusButton = stepRow:WaitForChild("Minus")
+	local betLabel = stepRow:WaitForChild("BetLabel")
+	local plusButton = stepRow:WaitForChild("Plus")
 	local actionButton = panel:WaitForChild("ActionButton")
 	local resultLabel = panel:WaitForChild("Result")
 
@@ -154,9 +162,28 @@ local function setupBoard(boardModel)
 	end
 	refreshBetLabel()
 
+	local function setBetFraction(fraction)
+		local raw = CrashConfig.MaxBet * fraction
+		local stepped = math.floor(raw / CrashConfig.BetStep + 0.5) * CrashConfig.BetStep
+		currentBet = math.clamp(stepped, CrashConfig.MinBet, CrashConfig.MaxBet)
+		refreshBetLabel()
+	end
+
 	minBetButton.MouseButton1Click:Connect(function()
 		currentBet = CrashConfig.MinBet
 		refreshBetLabel()
+	end)
+
+	quarterButton.MouseButton1Click:Connect(function()
+		setBetFraction(0.25)
+	end)
+
+	halfButton.MouseButton1Click:Connect(function()
+		setBetFraction(0.5)
+	end)
+
+	threeQuarterButton.MouseButton1Click:Connect(function()
+		setBetFraction(0.75)
 	end)
 
 	minusButton.MouseButton1Click:Connect(function()
@@ -239,7 +266,7 @@ local function setupBoard(boardModel)
 				end
 
 				local elapsed = math.log(math.max(multiplier, 1.0001)) / CrashConfig.GrowthRate
-				local point = computeGraphPoint(elapsed, multiplier, graphWidth, graphHeight)
+				local point = computeGraphPoint(elapsed, graphWidth, graphHeight)
 				if lastPoint then
 					drawSegment(curveContainer, lastPoint, point, multiplier < 2 and GREEN or GOLD)
 				end

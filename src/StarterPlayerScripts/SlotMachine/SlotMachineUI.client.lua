@@ -138,11 +138,16 @@ local function setupCabinet(cabinetModel)
 
 	local balanceLabel = panel:WaitForChild("Balance")
 	local betRow = panel:WaitForChild("BetRow")
-	local minBetButton = betRow:WaitForChild("MinBet")
-	local minusButton = betRow:WaitForChild("Minus")
-	local betLabel = betRow:WaitForChild("BetLabel")
-	local plusButton = betRow:WaitForChild("Plus")
-	local maxBetButton = betRow:WaitForChild("MaxBet")
+	local quickRow = betRow:WaitForChild("QuickRow")
+	local stepRow = betRow:WaitForChild("StepRow")
+	local minBetButton = quickRow:WaitForChild("MinBet")
+	local quarterButton = quickRow:WaitForChild("Quarter")
+	local halfButton = quickRow:WaitForChild("Half")
+	local threeQuarterButton = quickRow:WaitForChild("ThreeQuarter")
+	local maxBetButton = quickRow:WaitForChild("MaxBet")
+	local minusButton = stepRow:WaitForChild("Minus")
+	local betLabel = stepRow:WaitForChild("BetLabel")
+	local plusButton = stepRow:WaitForChild("Plus")
 	local spinButton = panel:WaitForChild("SpinButton")
 	local resultLabel = panel:WaitForChild("Result")
 
@@ -157,10 +162,32 @@ local function setupCabinet(cabinetModel)
 		betLabel.Text = "Mise : " .. currentBet
 	end
 
+	local function setBetFraction(fraction)
+		local raw = SlotMachineConfig.MaxBet * fraction
+		local stepped = math.floor(raw / SlotMachineConfig.BetStep + 0.5) * SlotMachineConfig.BetStep
+		currentBet = math.clamp(stepped, SlotMachineConfig.MinBet, SlotMachineConfig.MaxBet)
+		refreshBetLabel()
+	end
+
 	minBetButton.MouseButton1Click:Connect(function()
 		playSound("ButtonClick")
 		currentBet = SlotMachineConfig.MinBet
 		refreshBetLabel()
+	end)
+
+	quarterButton.MouseButton1Click:Connect(function()
+		playSound("ButtonClick")
+		setBetFraction(0.25)
+	end)
+
+	halfButton.MouseButton1Click:Connect(function()
+		playSound("ButtonClick")
+		setBetFraction(0.5)
+	end)
+
+	threeQuarterButton.MouseButton1Click:Connect(function()
+		playSound("ButtonClick")
+		setBetFraction(0.75)
 	end)
 
 	minusButton.MouseButton1Click:Connect(function()
