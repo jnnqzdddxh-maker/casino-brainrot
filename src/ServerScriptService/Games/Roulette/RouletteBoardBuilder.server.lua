@@ -12,22 +12,25 @@ local addStroke = UIBuilder.addStroke
 -- "RouletteSpawn" (position/rotation define where the board appears).
 local SPAWN_MARKER_NAME = "RouletteSpawn"
 
-local BODY_COLOR = Theme.Body
-local SCREEN_COLOR = Theme.Screen
+-- Roulette gets its own brighter, pink/gold "carnival wheel" palette instead
+-- of the dark-navy theme the other games use, to match the reference art
+-- style directly (vivid magenta/tan wheel, warm plum background).
 local TRIM_COLOR = Theme.Trim
 local TEXT_COLOR = Theme.Text
 local MUTED_COLOR = Theme.Muted
-local RED_COLOR = Theme.Red
-local BLACK_COLOR = Theme.RouletteBlack
-local GREEN_COLOR = Theme.Green
-local NEUTRAL_COLOR = Theme.Neutral
+local BODY_COLOR = Color3.fromRGB(48, 24, 58)
+local SCREEN_COLOR = Color3.fromRGB(35, 16, 44)
+local RED_COLOR = Color3.fromRGB(232, 46, 132) -- "red"/segment A: hot pink
+local BLACK_COLOR = Color3.fromRGB(216, 174, 112) -- "black"/segment B: warm gold-tan
+local GREEN_COLOR = Color3.fromRGB(46, 206, 191) -- zero: bright teal, kept distinct
+local NEUTRAL_COLOR = Color3.fromRGB(90, 58, 104)
 
 -- A flat table, not a standee: X/Z are the tabletop footprint, Y is table
 -- height. The screen sits on the TOP face, so players look down onto it.
 -- The wheel itself lives separately on RouletteWheelBuilder's big sign —
 -- this mat is just the betting layout, so it can stay wide and low.
 local TABLE_SIZE = Vector3.new(11, 3, 7.6)
-local CANVAS_SIZE = Vector2.new(1100, 740)
+local CANVAS_SIZE = Vector2.new(1060, 740)
 
 local function numberColor(number)
 	local colorName = RouletteConfig.GetColor(number)
@@ -43,7 +46,7 @@ local function buildNumberGrid(parent, layoutOrder)
 	local numbersRow = create("Frame", {
 		Name = "NumbersRow",
 		LayoutOrder = layoutOrder,
-		Size = UDim2.new(0, 1017, 0, 226),
+		Size = UDim2.new(0, 984, 0, 222),
 		BackgroundTransparency = 1,
 		Parent = parent,
 	})
@@ -56,10 +59,11 @@ local function buildNumberGrid(parent, layoutOrder)
 		Parent = numbersRow,
 	})
 
+	-- Round chips, like the reference art, instead of a square felt grid.
 	local zeroButton = create("TextButton", {
 		Name = "Num0",
 		LayoutOrder = 1,
-		Size = UDim2.new(0, 66, 0, 226),
+		Size = UDim2.new(0, 70, 0, 222),
 		BackgroundColor3 = numberColor(0),
 		BorderSizePixel = 0,
 		Font = Enum.Font.GothamBold,
@@ -69,20 +73,20 @@ local function buildNumberGrid(parent, layoutOrder)
 		AutoButtonColor = true,
 		Parent = numbersRow,
 	})
-	addCorner(zeroButton, 8)
+	addCorner(zeroButton, 35)
 	addStroke(zeroButton, TRIM_COLOR, 0.2)
 	UIBuilder.addRaisedLook(zeroButton)
 
 	local numberGrid = create("Frame", {
 		Name = "NumberGrid",
 		LayoutOrder = 2,
-		Size = UDim2.new(0, 943, 0, 226),
+		Size = UDim2.new(0, 906, 0, 222),
 		BackgroundTransparency = 1,
 		Parent = numbersRow,
 	})
 	create("UIGridLayout", {
-		CellSize = UDim2.new(0, 74, 0, 72),
-		CellPadding = UDim2.new(0, 5, 0, 5),
+		CellSize = UDim2.new(0, 70, 0, 70),
+		CellPadding = UDim2.new(0, 6, 0, 6),
 		FillDirection = Enum.FillDirection.Horizontal,
 		FillDirectionMaxCells = 12,
 		SortOrder = Enum.SortOrder.LayoutOrder,
@@ -102,8 +106,8 @@ local function buildNumberGrid(parent, layoutOrder)
 			AutoButtonColor = true,
 			Parent = numberGrid,
 		})
-		addCorner(button, 6)
-		addStroke(button, TRIM_COLOR, 0.2)
+		addCorner(button, 35)
+		addStroke(button, TRIM_COLOR, 0.25)
 		UIBuilder.addRaisedLook(button)
 	end
 
@@ -145,7 +149,7 @@ local function buildOutsideBets(parent, layoutOrder)
 			AutoButtonColor = true,
 			Parent = outsideRow,
 		})
-		addCorner(button, 10)
+		addCorner(button, 32) -- pill shape, matching the round number chips
 		addStroke(button, TRIM_COLOR, 0.3)
 		UIBuilder.addRaisedLook(button)
 	end
@@ -195,7 +199,7 @@ local function buildScreenPanel(screenPart)
 	create("TextLabel", {
 		Name = "Title",
 		LayoutOrder = 1,
-		Size = UDim2.new(0, 1017, 0, 38),
+		Size = UDim2.new(0, 984, 0, 38),
 		BackgroundTransparency = 1,
 		Font = Enum.Font.GothamBlack,
 		Text = "CASINO BRAINROT — ROULETTE",
@@ -207,7 +211,7 @@ local function buildScreenPanel(screenPart)
 	create("TextLabel", {
 		Name = "StatusLabel",
 		LayoutOrder = 3,
-		Size = UDim2.new(0, 1017, 0, 30),
+		Size = UDim2.new(0, 984, 0, 30),
 		BackgroundTransparency = 1,
 		Font = Enum.Font.Gotham,
 		Text = "En attente...",
@@ -224,7 +228,7 @@ local function buildScreenPanel(screenPart)
 	local historyRow = create("Frame", {
 		Name = "HistoryRow",
 		LayoutOrder = 7,
-		Size = UDim2.new(0, 1017, 0, 44),
+		Size = UDim2.new(0, 984, 0, 44),
 		BackgroundTransparency = 1,
 		Parent = panel,
 	})
@@ -240,7 +244,7 @@ local function buildScreenPanel(screenPart)
 	create("TextLabel", {
 		Name = "Result",
 		LayoutOrder = 8,
-		Size = UDim2.new(0, 1017, 0, 30),
+		Size = UDim2.new(0, 984, 0, 30),
 		BackgroundTransparency = 1,
 		Font = Enum.Font.GothamBold,
 		Text = "",
