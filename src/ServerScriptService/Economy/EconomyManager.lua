@@ -1,7 +1,17 @@
 local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
 
-local ChipsStore = DataStoreService:GetDataStore("PlayerChips_v1")
+-- GetDataStore throws if the place has never been published to Roblox, which
+-- is the normal case while testing in Studio. Fall back to in-memory-only
+-- balances (no persistence) instead of crashing the whole module.
+local storeSuccess, ChipsStore = pcall(function()
+	return DataStoreService:GetDataStore("PlayerChips_v1")
+end)
+
+if not storeSuccess then
+	warn("EconomyManager: DataStore unavailable (publish the place to Roblox to enable saving) — balances won't persist.")
+	ChipsStore = nil
+end
 
 local STARTING_BALANCE = 500
 
@@ -13,6 +23,10 @@ local function getChipsValue(player)
 end
 
 local function loadBalance(player)
+	if not ChipsStore then
+		return STARTING_BALANCE
+	end
+
 	local success, result = pcall(function()
 		return ChipsStore:GetAsync("Player_" .. player.UserId)
 	end)
@@ -29,6 +43,10 @@ local function loadBalance(player)
 end
 
 local function saveBalance(player)
+	if not ChipsStore then
+		return
+	end
+
 	local chips = getChipsValue(player)
 	if not chips then
 		return
