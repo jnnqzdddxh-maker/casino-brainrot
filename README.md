@@ -1,6 +1,6 @@
 # Casino Brainrot
 
-Casino social Roblox — Chips, machine à sous, Crash, et (bientôt) Plinko et plus.
+Casino social Roblox — Chips, machine à sous, Crash, Roulette, et (bientôt) Plinko et plus.
 
 ## Structure du projet
 
@@ -16,9 +16,11 @@ src/
     Games/
       SlotMachine/        -- Logique serveur (autoritaire) de la machine à sous
       Crash/              -- Manche partagée : multiplicateur qui monte, cash out avant l'explosion
+      Roulette/            -- Manche partagée : roue européenne (0-36), numéro plein ou mises extérieures
   StarterPlayerScripts/
     SlotMachine/          -- UI + API client de la machine à sous
     Crash/                -- UI client de Crash
+    Roulette/              -- UI client de Roulette
 ```
 
 Le monde 3D (les salles, les bornes physiques) reste dans le fichier `.rbxl`
@@ -27,6 +29,7 @@ automatiquement dans le monde via une Part marqueur qu'on place à la main :
 
 - Machine à sous : place une Part nommée exactement `SlotMachineSpawn`.
 - Crash : place une Part nommée exactement `CrashSpawn`.
+- Roulette : place une Part nommée exactement `RouletteSpawn`.
 
 La position/rotation de la Part définit où la borne apparaît ; elle est
 remplacée par la borne complète au démarrage du serveur.
@@ -59,3 +62,14 @@ partir de 1.00x, chacun mise avant le décollage puis encaisse (Cash Out)
 quand il veut avant l'explosion. Ne pas encaisser à temps = mise perdue.
 Réglages dans `ReplicatedStorage/Shared/CrashConfig.lua` (durée de mise,
 vitesse de montée, avantage de la maison).
+
+## Roulette
+
+Roulette européenne (zéro unique, 37 cases), manche partagée comme Crash.
+Une seule mise active par joueur et par manche : numéro plein (35:1),
+Rouge/Noir, Pair/Impair, ou Manque/Passe (1-18 / 19-36), toutes en 1:1.
+La roue tourne vraiment (rotation animée) et ralentit jusqu'à s'arrêter sur
+le numéro tiré. Contrairement aux autres jeux, l'avantage de la maison n'est
+pas retouché à la main : c'est l'avantage réel de la roulette européenne
+(~2.7%, grâce au zéro), pour varier les sensations par rapport aux slots et
+à Crash. Réglages dans `ReplicatedStorage/Shared/RouletteConfig.lua`.
