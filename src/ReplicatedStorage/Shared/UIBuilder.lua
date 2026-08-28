@@ -16,6 +16,40 @@ function UIBuilder.addStroke(parent, color, transparency)
 	UIBuilder.create("UIStroke", { Color = color, Thickness = 2, Transparency = transparency or 0, Parent = parent })
 end
 
+-- Makes a flat button read as a raised, pressable key: a soft light-to-dark
+-- sheen across the face, plus a diagonal light/dark bevel on its border.
+-- Purely additive (gradient + stroke) so it works on top of any existing
+-- BackgroundColor3 without needing extra wrapper instances.
+function UIBuilder.addRaisedLook(button)
+	UIBuilder.create("UIGradient", {
+		Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+			ColorSequenceKeypoint.new(1, Color3.new(0, 0, 0)),
+		}),
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0.72),
+			NumberSequenceKeypoint.new(0.5, 0.88),
+			NumberSequenceKeypoint.new(1, 0.6),
+		}),
+		Rotation = 90,
+		Parent = button,
+	})
+
+	local stroke = UIBuilder.create("UIStroke", {
+		Thickness = 2,
+		Transparency = 0.25,
+		Parent = button,
+	})
+	UIBuilder.create("UIGradient", {
+		Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+			ColorSequenceKeypoint.new(1, Color3.new(0, 0, 0)),
+		}),
+		Rotation = 45,
+		Parent = stroke,
+	})
+end
+
 local SCREEN_COLOR = Color3.fromRGB(11, 14, 20)
 local TRIM_COLOR = Color3.fromRGB(242, 179, 61)
 local TEXT_COLOR = Color3.fromRGB(233, 236, 244)
@@ -36,6 +70,7 @@ local function quickButton(parent, name, text, layoutOrder)
 	})
 	UIBuilder.addCorner(button, 10)
 	UIBuilder.addStroke(button, TRIM_COLOR, 0.6)
+	UIBuilder.addRaisedLook(button)
 	return button
 end
 
@@ -112,6 +147,7 @@ function UIBuilder.buildBetRow(parent, layoutOrder, minBet)
 	})
 	UIBuilder.addCorner(minusButton, 10)
 	UIBuilder.addStroke(minusButton, TRIM_COLOR, 0.6)
+	UIBuilder.addRaisedLook(minusButton)
 
 	UIBuilder.create("TextLabel", {
 		Name = "BetLabel",
@@ -140,6 +176,7 @@ function UIBuilder.buildBetRow(parent, layoutOrder, minBet)
 	})
 	UIBuilder.addCorner(plusButton, 10)
 	UIBuilder.addStroke(plusButton, TRIM_COLOR, 0.6)
+	UIBuilder.addRaisedLook(plusButton)
 
 	return betRow
 end

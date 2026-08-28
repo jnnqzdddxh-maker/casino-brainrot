@@ -20,7 +20,9 @@ local RED_COLOR = Color3.fromRGB(200, 45, 55)
 local BLACK_COLOR = Color3.fromRGB(24, 24, 28)
 local GREEN_COLOR = Color3.fromRGB(45, 165, 95)
 
-local BOARD_SIZE = Vector3.new(9, 12.5, 0.6)
+-- A flat table, not a standee: X/Z are the tabletop footprint, Y is table
+-- height. The screen sits on the TOP face, so players look down onto it.
+local TABLE_SIZE = Vector3.new(7, 3, 10)
 local CANVAS_SIZE = Vector2.new(800, 1020)
 
 local function numberColor(number)
@@ -80,19 +82,51 @@ local function buildWheel(parent)
 		Parent = wheelFrame,
 	})
 
+	-- Segments are wide enough to overlap their neighbors at the outer edge
+	-- (chord width for 37 wedges at radius ~124 is ~21px) so the wheel reads
+	-- as one solid disc instead of a spiky pinwheel with visible gaps.
 	local segmentAngle = 360 / #RouletteConfig.WheelOrder
 	for i, number in RouletteConfig.WheelOrder do
 		create("Frame", {
 			Name = "Segment" .. i,
 			AnchorPoint = Vector2.new(0.5, 1),
 			Position = UDim2.fromScale(0.5, 0.5),
-			Size = UDim2.new(0, 16, 0, 124),
+			Size = UDim2.new(0, 26, 0, 124),
 			Rotation = (i - 1) * segmentAngle,
 			BackgroundColor3 = numberColor(number),
 			BorderSizePixel = 0,
 			Parent = spinner,
 		})
 	end
+
+	-- Thin gold dividers at each pocket boundary, on top of the wedges, for
+	-- a clean "defined pockets" wheel look.
+	for i = 1, #RouletteConfig.WheelOrder do
+		create("Frame", {
+			Name = "Divider" .. i,
+			AnchorPoint = Vector2.new(0.5, 1),
+			Position = UDim2.fromScale(0.5, 0.5),
+			Size = UDim2.new(0, 2, 0, 124),
+			Rotation = (i - 1.5) * segmentAngle,
+			BackgroundColor3 = TRIM_COLOR,
+			BackgroundTransparency = 0.4,
+			BorderSizePixel = 0,
+			ZIndex = 2,
+			Parent = spinner,
+		})
+	end
+
+	local hub = create("Frame", {
+		Name = "Hub",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.new(0, 34, 0, 34),
+		BackgroundColor3 = TRIM_COLOR,
+		BorderSizePixel = 0,
+		ZIndex = 3,
+		Parent = spinner,
+	})
+	addCorner(hub, 17)
 
 	create("TextLabel", {
 		Name = "Pointer",
@@ -151,7 +185,7 @@ local function buildNumberGrid(parent, layoutOrder)
 		Parent = numbersRow,
 	})
 	addCorner(zeroButton, 8)
-	addStroke(zeroButton, TRIM_COLOR, 0.6)
+	UIBuilder.addRaisedLook(zeroButton)
 
 	local numberGrid = create("Frame", {
 		Name = "NumberGrid",
@@ -183,6 +217,7 @@ local function buildNumberGrid(parent, layoutOrder)
 			Parent = numberGrid,
 		})
 		addCorner(button, 6)
+		UIBuilder.addRaisedLook(button)
 	end
 
 	for column = 1, 12 do
@@ -225,6 +260,7 @@ local function buildOutsideBets(parent, layoutOrder)
 		})
 		addCorner(button, 10)
 		addStroke(button, TRIM_COLOR, 0.6)
+		UIBuilder.addRaisedLook(button)
 	end
 
 	outsideButton("Red", "ROUGE", RED_COLOR, 1)
@@ -238,7 +274,7 @@ end
 local function buildScreenPanel(screenPart)
 	local surfaceGui = create("SurfaceGui", {
 		Name = "ScreenGui",
-		Face = Enum.NormalId.Front,
+		Face = Enum.NormalId.Top,
 		SizingMode = Enum.SurfaceGuiSizingMode.FixedSize,
 		CanvasSize = CANVAS_SIZE,
 		Parent = screenPart,
@@ -338,14 +374,14 @@ local function getMarkerCFrame(marker)
 end
 
 local function buildBoardAt(markerCFrame)
-	local cframe = markerCFrame * CFrame.new(0, BOARD_SIZE.Y / 2, 0)
+	local cframe = markerCFrame * CFrame.new(0, TABLE_SIZE.Y / 2, 0)
 
 	local model = Instance.new("Model")
 	model.Name = "RouletteBoard"
 
 	local body = create("Part", {
 		Name = "Body",
-		Size = BOARD_SIZE,
+		Size = TABLE_SIZE,
 		Anchored = true,
 		CanCollide = true,
 		Material = Enum.Material.SmoothPlastic,
@@ -354,37 +390,41 @@ local function buildBoardAt(markerCFrame)
 		Parent = model,
 	})
 
-	local function trimStrip(name, yOffset)
+	-- A glowing gold frame around the tabletop's rim, just under the glass.
+	local function edgeStrip(name, size, offset)
 		return create("Part", {
 			Name = name,
-			Size = Vector3.new(BOARD_SIZE.X + 0.1, 0.15, BOARD_SIZE.Z + 0.1),
+			Size = size,
 			Anchored = true,
 			CanCollide = false,
 			Material = Enum.Material.Neon,
 			Color = TRIM_COLOR,
-			CFrame = cframe * CFrame.new(0, yOffset, 0),
+			CFrame = cframe * CFrame.new(offset),
 			Parent = model,
 		})
 	end
 
-	trimStrip("TrimTop", BOARD_SIZE.Y / 2 - 0.1)
-	local trimBottom = trimStrip("TrimBottom", -BOARD_SIZE.Y / 2 + 0.15)
+	local rimY = TABLE_SIZE.Y / 2 - 0.05
+	edgeStrip("TrimFront", Vector3.new(TABLE_SIZE.X, 0.15, 0.2), Vector3.new(0, rimY, TABLE_SIZE.Z / 2 - 0.1))
+	edgeStrip("TrimBack", Vector3.new(TABLE_SIZE.X, 0.15, 0.2), Vector3.new(0, rimY, -TABLE_SIZE.Z / 2 + 0.1))
+	edgeStrip("TrimLeft", Vector3.new(0.2, 0.15, TABLE_SIZE.Z), Vector3.new(TABLE_SIZE.X / 2 - 0.1, rimY, 0))
+	local trimRight = edgeStrip("TrimRight", Vector3.new(0.2, 0.15, TABLE_SIZE.Z), Vector3.new(-TABLE_SIZE.X / 2 + 0.1, rimY, 0))
 
 	create("PointLight", {
 		Color = TRIM_COLOR,
 		Range = 14,
 		Brightness = 2.5,
-		Parent = trimBottom,
+		Parent = trimRight,
 	})
 
 	local screen = create("Part", {
 		Name = "Screen",
-		Size = Vector3.new(BOARD_SIZE.X - 0.4, BOARD_SIZE.Y - 0.6, 0.1),
+		Size = Vector3.new(TABLE_SIZE.X - 0.4, 0.1, TABLE_SIZE.Z - 0.4),
 		Anchored = true,
 		CanCollide = false,
 		Material = Enum.Material.SmoothPlastic,
 		Color = SCREEN_COLOR,
-		CFrame = cframe * CFrame.new(0, 0, -BOARD_SIZE.Z / 2 - 0.06),
+		CFrame = cframe * CFrame.new(0, TABLE_SIZE.Y / 2 + 0.06, 0),
 		Parent = model,
 	})
 
