@@ -2,6 +2,10 @@ local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local SlotMachineConfig = require(ReplicatedStorage.Shared.SlotMachineConfig)
+local UIBuilder = require(ReplicatedStorage.Shared.UIBuilder)
+local create = UIBuilder.create
+local addCorner = UIBuilder.addCorner
+local addStroke = UIBuilder.addStroke
 
 -- Place an empty Part anywhere in Workspace and rename it exactly
 -- "SlotMachineSpawn" (position/rotation define where the cabinet appears).
@@ -18,22 +22,6 @@ local CABINET_SIZE = Vector3.new(5, 10, 2.5)
 local CANVAS_SIZE = Vector2.new(500, 950)
 local CELL_SIZE = SlotMachineConfig.CellSize
 local CELL_GAP = 8
-
-local function create(className, props)
-	local instance = Instance.new(className)
-	for key, value in props do
-		instance[key] = value
-	end
-	return instance
-end
-
-local function addCorner(parent, radius)
-	create("UICorner", { CornerRadius = UDim.new(0, radius), Parent = parent })
-end
-
-local function addStroke(parent, color, transparency)
-	create("UIStroke", { Color = color, Thickness = 2, Transparency = transparency or 0, Parent = parent })
-end
 
 -- Builds the interactive panel (title, reels, bet stepper, spin button,
 -- result text) inside the cabinet's screen SurfaceGui. Behavior (clicks,
