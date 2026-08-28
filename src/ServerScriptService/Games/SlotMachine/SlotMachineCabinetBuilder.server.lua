@@ -95,8 +95,11 @@ local function buildScreenPanel(screenPart)
 		Parent = panel,
 	})
 
+	-- No vertical gap: each reel is one continuous clipped "window" that a
+	-- scrolling strip of symbols slides behind (built client-side), giving a
+	-- real slot-machine reel effect instead of 3 static boxes.
 	local gridWidth = SlotMachineConfig.ReelCount * CELL_SIZE + (SlotMachineConfig.ReelCount - 1) * CELL_GAP
-	local gridHeight = SlotMachineConfig.GridRows * CELL_SIZE + (SlotMachineConfig.GridRows - 1) * CELL_GAP
+	local gridHeight = SlotMachineConfig.GridRows * CELL_SIZE
 
 	local reelsFrame = create("Frame", {
 		Name = "Reels",
@@ -115,48 +118,18 @@ local function buildScreenPanel(screenPart)
 		Parent = reelsFrame,
 	})
 
-	-- Each reel is a column of GridRows symbols. Only the middle row is the
-	-- real (server-authoritative) payline; the rest is visual flavor.
 	for col = 1, SlotMachineConfig.ReelCount do
-		local column = create("Frame", {
-			Name = "Column" .. col,
+		local window = create("Frame", {
+			Name = "Window" .. col,
 			LayoutOrder = col,
 			Size = UDim2.new(0, CELL_SIZE, 0, gridHeight),
-			BackgroundTransparency = 1,
+			BackgroundColor3 = SCREEN_COLOR,
+			BorderSizePixel = 0,
+			ClipsDescendants = true,
 			Parent = reelsFrame,
 		})
-
-		create("UIListLayout", {
-			FillDirection = Enum.FillDirection.Vertical,
-			HorizontalAlignment = Enum.HorizontalAlignment.Center,
-			VerticalAlignment = Enum.VerticalAlignment.Center,
-			SortOrder = Enum.SortOrder.LayoutOrder,
-			Padding = UDim.new(0, CELL_GAP),
-			Parent = column,
-		})
-
-		for row = 1, SlotMachineConfig.GridRows do
-			local cell = create("Frame", {
-				Name = "Row" .. row,
-				LayoutOrder = row,
-				Size = UDim2.new(0, CELL_SIZE, 0, CELL_SIZE),
-				BackgroundColor3 = SCREEN_COLOR,
-				BorderSizePixel = 0,
-				Parent = column,
-			})
-			addCorner(cell, 12)
-			addStroke(cell, TRIM_COLOR, 0.7)
-
-			create("TextLabel", {
-				Name = "Symbol",
-				Size = UDim2.fromScale(1, 1),
-				BackgroundTransparency = 1,
-				Font = Enum.Font.SourceSansBold,
-				Text = "🍒",
-				TextScaled = true,
-				Parent = cell,
-			})
-		end
+		addCorner(window, 12)
+		addStroke(window, TRIM_COLOR, 0.7)
 	end
 
 	create("TextLabel", {

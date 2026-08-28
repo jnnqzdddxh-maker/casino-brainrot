@@ -24,6 +24,6 @@ SlotMachineConfig.BetStep = 10
 -- Fraction of a symbol's Payout awarded when only 2 of the 3 reels match
 -- (instead of all 3). Targets ~90% return-to-player overall (the machine
 -- wins on average, like a real casino, without feeling stingy).
-SlotMachineConfig.TwoMatchMultiplier = 0.3
+SlotMachineConfig.TwoMatchMultiplier = 0.32
 
 return SlotMachineConfig
