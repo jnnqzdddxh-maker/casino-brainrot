@@ -1,7 +1,6 @@
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
 
 local RouletteConfig = require(ReplicatedStorage.Shared.RouletteConfig)
 
@@ -24,13 +23,6 @@ local ERROR_MESSAGES = {
 	round_in_progress = "Attends le prochain tour.",
 }
 
-local WHEEL_SEGMENT_ANGLE = 360 / #RouletteConfig.WheelOrder
-
-local WHEEL_INDEX_BY_NUMBER = {}
-for index, number in RouletteConfig.WheelOrder do
-	WHEEL_INDEX_BY_NUMBER[number] = index
-end
-
 -- One shared round for the whole server: every board mirrors the same state.
 local latestUpdate = { phase = "waiting", timeRemaining = RouletteConfig.WaitingDuration, history = {} }
 local hasActiveBet = false
@@ -49,15 +41,6 @@ RouletteBetResult.OnClientEvent:Connect(function(result)
 		hasActiveBet = true
 	end
 end)
-
-local function colorFor(colorName)
-	if colorName == "red" then
-		return RED
-	elseif colorName == "green" then
-		return GREEN
-	end
-	return TEXT
-end
 
 local function refreshHistory(historyRow)
 	for _, child in historyRow:GetChildren() do
@@ -88,11 +71,6 @@ local function setupBoard(boardModel)
 	local gui = screen:WaitForChild("ScreenGui")
 	local panel = gui:WaitForChild("Panel")
 
-	local wheelRow = panel:WaitForChild("WheelRow")
-	local wheelContainer = wheelRow:WaitForChild("WheelContainer")
-	local wheelFrame = wheelContainer:WaitForChild("WheelFrame")
-	local ballPivot = wheelFrame:WaitForChild("BallPivot")
-	local winningNumberLabel = wheelRow:WaitForChild("WinningNumberLabel")
 	local statusLabel = panel:WaitForChild("StatusLabel")
 	local numbersRow = panel:WaitForChild("NumbersRow")
 	local numberGrid = numbersRow:WaitForChild("NumberGrid")
@@ -219,38 +197,12 @@ local function setupBoard(boardModel)
 		end
 	end)
 
-	-- Ball spin: the wheel itself never moves — only BallPivot rotates,
-	-- swinging the ball (offset from its center) around the fixed wheel
-	-- until it lands directly over the winning pocket's own angular
-	-- position, always spinning forward from wherever it currently rests.
-	local currentRotation = 0
-
-	local function spinBallTo(winningNumber)
-		local index = WHEEL_INDEX_BY_NUMBER[winningNumber] or 1
-		local targetMod = ((index - 1) * WHEEL_SEGMENT_ANGLE) % 360
-		local currentMod = currentRotation % 360
-		local delta = (targetMod - currentMod) % 360
-		local newRotation = currentRotation + delta + 8 * 360
-
-		TweenService:Create(ballPivot, TweenInfo.new(RouletteConfig.SpinDuration, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-			Rotation = newRotation,
-		}):Play()
-
-		currentRotation = newRotation
-	end
-
-	local localPhase = "waiting"
-
+	-- The wheel animation itself lives on the separate RouletteWheel sign
+	-- (see RouletteWheelUI.client.lua) — this mat only needs to reflect
+	-- phase/countdown and the betting UI.
 	task.spawn(function()
 		while boardModel.Parent do
 			local phase = latestUpdate.phase
-
-			if phase ~= localPhase then
-				if phase == "spinning" then
-					spinBallTo(latestUpdate.winningNumber)
-				end
-				localPhase = phase
-			end
 
 			if phase == "waiting" then
 				statusLabel.Text = ("Placez vos mises... %ds"):format(math.ceil(latestUpdate.timeRemaining or 0))
@@ -261,9 +213,7 @@ local function setupBoard(boardModel)
 				statusLabel.Text = "La roue tourne..."
 				statusLabel.TextColor3 = MUTED
 			elseif phase == "result" then
-				winningNumberLabel.Text = tostring(latestUpdate.winningNumber)
-				winningNumberLabel.TextColor3 = colorFor(latestUpdate.winningColor)
-				statusLabel.Text = "Résultat !"
+				statusLabel.Text = ("Résultat : %d"):format(latestUpdate.winningNumber)
 				statusLabel.TextColor3 = MUTED
 			end
 

@@ -29,7 +29,9 @@ automatiquement dans le monde via une Part marqueur qu'on place à la main :
 
 - Machine à sous : place une Part nommée exactement `SlotMachineSpawn`.
 - Crash : place une Part nommée exactement `CrashSpawn`.
-- Roulette : place une Part nommée exactement `RouletteSpawn`.
+- Roulette : **deux** Parts distinctes, à placer côte à côte —
+  `RouletteSpawn` (la table de mise, au sol) et `RouletteWheelSpawn` (la
+  grande roue montée sur pilier, juste à côté ou derrière la table).
 
 La position/rotation de la Part définit où la borne apparaît ; elle est
 remplacée par la borne complète au démarrage du serveur.
@@ -66,10 +68,12 @@ vitesse de montée, avantage de la maison).
 ## Roulette
 
 Roulette européenne (zéro unique, 37 cases), manche partagée comme Crash.
-Une seule mise active par joueur et par manche : numéro plein (35:1),
-Rouge/Noir, Pair/Impair, ou Manque/Passe (1-18 / 19-36), toutes en 1:1.
-La roue tourne vraiment (rotation animée) et ralentit jusqu'à s'arrêter sur
-le numéro tiré. Contrairement aux autres jeux, l'avantage de la maison n'est
-pas retouché à la main : c'est l'avantage réel de la roulette européenne
+Deux objets séparés dans le monde : une **grande roue** sur pilier (la bille
+tourne et s'arrête sur le numéro tiré — la roue elle-même ne bouge pas) et
+une **table de mise** au sol juste à côté, avec la grille de numéros (0 à
+36) et les mises extérieures (Rouge/Noir, Pair/Impair, Manque/Passe). Une
+seule mise active par joueur et par manche : numéro plein (35:1), le reste
+en 1:1. Contrairement aux autres jeux, l'avantage de la maison n'est pas
+retouché à la main : c'est l'avantage réel de la roulette européenne
 (~2.7%, grâce au zéro), pour varier les sensations par rapport aux slots et
 à Crash. Réglages dans `ReplicatedStorage/Shared/RouletteConfig.lua`.
