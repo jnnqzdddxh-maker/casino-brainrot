@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Casino Brainrot — Récapitulatif du projet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B0E14;
+    --surface: #131826;
+    --surface-2: #1A2032;
+    --gold: #F2B33D;
+    --green: #3FD9A0;
+    --red: #FF5D6C;
+    --text: #E9ECF4;
+    --muted: #8B93A7;
+    --line: rgba(242,179,61,0.16);
+  }
+  *{ box-sizing: border-box; margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before{
+    content:"";
+    position: fixed; inset:0;
+    background:
+      radial-gradient(circle at 15% 8%, rgba(242,179,61,0.10), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(63,217,160,0.08), transparent 40%);
+    pointer-events:none; z-index:0;
+  }
+  .wrap{ max-width: 980px; margin: 0 auto; padding: 0 28px 120px; position:relative; z-index:1; }
+
+  /* Marquee border, casino-light motif */
+  .marquee{
+    height: 10px;
+    background-image: radial-gradient(circle, var(--gold) 2.2px, transparent 2.3px);
+    background-size: 22px 10px;
+    background-repeat: repeat-x;
+    opacity: 0.55;
+  }
+
+  header.hero{
+    padding: 90px 0 60px;
+    text-align: center;
+  }
+  .eyebrow{
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.3em;
+    font-size: 12px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 22px;
+  }
+  h1{
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(56px, 10vw, 108px);
+    line-height: 0.95;
+    letter-spacing: 0.01em;
+    background: linear-gradient(180deg, #FFE7B0 0%, var(--gold) 55%, #B9812A 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .tagline{
+    margin-top: 18px;
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 560px;
+    margin-left: auto; margin-right: auto;
+  }
+  .status-row{
+    margin-top: 34px;
+    display:flex; gap:12px; justify-content:center; flex-wrap: wrap;
+  }
+  .pill{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--muted);
+  }
+  .pill.on{ color: var(--green); border-color: rgba(63,217,160,0.3); }
+  .pill.wip{ color: var(--gold); border-color: rgba(242,179,61,0.3); }
+
+  section{ margin-top: 74px; }
+  .section-head{
+    display:flex; align-items:baseline; gap:14px;
+    margin-bottom: 26px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 16px;
+  }
+  .section-head .num{
+    font-family:'IBM Plex Mono', monospace;
+    color: var(--gold);
+    font-size: 13px;
+  }
+  .section-head h2{
+    font-family:'Bebas Neue', sans-serif;
+    font-size: 34px;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+  .section-head p{
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--muted);
+    text-align:right;
+  }
+
+  p.lead{ color: var(--muted); font-size: 16px; max-width: 680px; }
+
+  /* Card grid for rooms */
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 14px;
+    margin-top: 22px;
+  }
+  .card{
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px;
+    position: relative;
+    overflow:hidden;
+  }
+  .card .tag{
+    position:absolute; top:14px; right:14px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 10px; letter-spacing:0.06em;
+    padding: 3px 8px; border-radius:6px;
+    text-transform: uppercase;
+  }
+  .tag.v1{ background: rgba(63,217,160,0.12); color: var(--green); }
+  .tag.later{ background: rgba(139,147,167,0.12); color: var(--muted); }
+  .card .icon{ font-size: 26px; margin-bottom: 12px; }
+  .card h3{ font-size: 16px; margin-bottom: 6px; }
+  .card p{ font-size: 13px; color: var(--muted); }
+
+  /* Progress checklist */
+  .steps{ margin-top: 22px; }
+  .step{
+    display:flex; gap:16px; align-items:flex-start;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .step:last-child{ border-bottom:none; }
+  .check{
+    flex: 0 0 26px; height: 26px; border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size: 13px; font-family:'IBM Plex Mono', monospace;
+    margin-top: 2px;
+  }
+  .check.done{ background: rgba(63,217,160,0.15); color: var(--green); border:1px solid rgba(63,217,160,0.35); }
+  .check.blocked{ background: rgba(255,93,108,0.12); color: var(--red); border:1px solid rgba(255,93,108,0.3); }
+  .step h4{ font-size: 15px; margin-bottom: 4px; }
+  .step p{ font-size: 13.5px; color: var(--muted); }
+
+  /* Economy table */
+  table{ width:100%; border-collapse: collapse; margin-top: 22px; font-size: 14px; }
+  th{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px; letter-spacing:0.05em; text-transform:uppercase;
+    color: var(--gold); text-align:left; padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  td{ padding: 13px 14px; border-bottom: 1px solid rgba(242,179,61,0.08); color: var(--text); vertical-align: top; }
+  td.muted{ color: var(--muted); }
+  tr:last-child td{ border-bottom:none; }
+
+  .two-col{
+    display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 22px;
+  }
+  @media (max-width: 640px){ .two-col{ grid-template-columns: 1fr; } .section-head{ flex-wrap:wrap; } .section-head p{ text-align:left; margin-left:0; } }
+
+  .box{
+    background: var(--surface); border:1px solid var(--line); border-radius: 14px; padding: 22px;
+  }
+  .box h3{ font-size: 15px; margin-bottom: 10px; color: var(--gold); }
+  .box ul{ list-style:none; }
+  .box li{ font-size: 13.5px; color: var(--muted); padding: 6px 0; padding-left: 18px; position:relative; }
+  .box li::before{ content:"—"; position:absolute; left:0; color: var(--gold); }
+
+  code, .code{
+    font-family:'IBM Plex Mono', monospace;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    padding: 2px 8px; border-radius: 6px; font-size: 12.5px; color: var(--green);
+  }
+
+  footer{
+    margin-top: 90px; text-align:center; color: var(--muted); font-size: 12.5px;
+    font-family:'IBM Plex Mono', monospace; letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+<div class="marquee"></div>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">Projet Roblox · Document de contexte</div>
+    <h1>CASINO<br>BRAINROT</h1>
+    <p class="tagline">Casino social en monnaie virtuelle, chance temporaire via brainrots, et progression par fortune totale — inspiré de Steal a Brainrot pour la boucle de rétention.</p>
+    <div class="status-row">
+      <span class="pill on">● Système Chips en ligne</span>
+      <span class="pill on">● Machine à sous fonctionnelle</span>
+      <span class="pill wip">◐ Claude Code — accès à activer</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="section-head">
+      <span class="num">01</span>
+      <h2>Le concept</h2>
+    </div>
+    <p class="lead">Un casino Roblox à plusieurs salles où les joueurs misent une monnaie virtuelle (Chips) gagnée dans le jeu. Les gains permettent d'acheter des <strong style="color:var(--text)">brainrots</strong>, qui offrent un bonus de chance <em>temporaire</em> — jamais permanent, pour que la progression ne s'arrête jamais. L'objectif du joueur : faire grimper sa <strong style="color:var(--text)">fortune totale</strong>, affichée en rang et en classement.</p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="num">02</span>
+      <h2>Les salles</h2>
+      <p>8 salles prévues · déblocage progressif</p>
+    </div>
+    <div class="grid">
+      <div class="card"><span class="tag v1">V1</span><div class="icon">🎰</div><h3>Machines à sous</h3><p>Point d'entrée, le plus simple à scripter.</p></div>
+      <div class="card"><span class="tag v1">V1</span><div class="icon">🪙</div><h3>Plinko</h3><p>Bille lâchée, multiplicateurs en bas.</p></div>
+      <div class="card"><span class="tag v1">V1</span><div class="icon">🚀</div><h3>Crash / Fusées</h3><p>Cash out avant l'explosion. Fort potentiel viral.</p></div>
+      <div class="card"><span class="tag later">Plus tard</span><div class="icon">🐎</div><h3>Courses</h3><p>Paris sur un participant, course automatisée.</p></div>
+      <div class="card"><span class="tag later">Plus tard</span><div class="icon">⚽</div><h3>Penalty / Foot</h3><p>Format viral TikTok, tir à cote variable.</p></div>
+      <div class="card"><span class="tag later">Plus tard</span><div class="icon">🃏</div><h3>Blackjack</h3><p>Contre un croupier bot, tables 4-6 joueurs.</p></div>
+      <div class="card"><span class="tag later">Plus tard</span><div class="icon">🎡</div><h3>Roulette</h3><p>Complexité proche du blackjack.</p></div>
+      <div class="card"><span class="tag later">Plus tard</span><div class="icon">♠️</div><h3>Poker</h3><p>Table 6-9 joueurs + salon vocal. Le plus lourd à dev.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="num">03</span>
+      <h2>Économie</h2>
+    </div>
+    <table>
+      <tr><th>Élément</th><th>Règle</th></tr>
+      <tr><td>Chips</td><td class="muted">Monnaie virtuelle, gagnée en jouant. Convertible depuis Robux, jamais l'inverse.</td></tr>
+      <tr><td>Brainrots — chance</td><td class="muted">Bonus de chance <strong style="color:var(--text)">temporaire</strong> (ex : +200 % pendant 10 min), tiers Commun → Mythique.</td></tr>
+      <tr><td>Brainrots — cosmétique</td><td class="muted">Catégorie séparée, purement collection/skin, sink illimité sans impact gameplay.</td></tr>
+      <tr><td>Trading</td><td class="muted">Écart de <strong style="color:var(--text)">1 tier maximum</strong> entre objets échangés. Mythique et Légendaire non-tradables. Règle stricte, aucun contournement.</td></tr>
+      <tr><td>Fortune totale</td><td class="muted">Chips + valeur des brainrots. Ne redescend jamais. Détermine le rang, le classement, et le déblocage des salles.</td></tr>
+      <tr><td>Jackpot progressif</td><td class="muted">% de chaque mise alimente un jackpot commun — sink + moment fort communautaire.</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="num">04</span>
+      <h2>Dépenses & rétention</h2>
+    </div>
+    <div class="two-col">
+      <div class="box">
+        <h3>Où va l'argent des joueurs</h3>
+        <ul>
+          <li>Cosmétique pur (skins, effets de victoire)</li>
+          <li>Confort (cooldowns réduits, accès prioritaire)</li>
+          <li>Statut social (titres, salons VIP, podium)</li>
+          <li>Jackpot progressif</li>
+          <li>Brainrots cosmétiques séparés des brainrots chance</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>Ce qui empêche le jeu de "finir"</h3>
+        <ul>
+          <li>Prestige / rebirth à multiplicateur permanent</li>
+          <li>Brainrots saisonniers, nouvelle méta toutes les 1-2 semaines</li>
+          <li>Chance plafonnée, pas la collection</li>
+          <li>Salons VIP à paliers multiples</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="num">05</span>
+      <h2>Où on en est</h2>
+      <p>Construit en copier-coller manuel, avant bascule Claude Code</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="check done">✓</div>
+        <div><h4>Structure de l'Explorer</h4><p>Dossiers <span class="code">Economy</span> et <span class="code">RemoteEvents</span> posés pour organiser le projet.</p></div>
+      </div>
+      <div class="step">
+        <div class="check done">✓</div>
+        <div><h4>Système de Chips</h4><p><span class="code">EconomyManager</span> — solde de départ, leaderstats affichées, sauvegarde/chargement DataStore par joueur.</p></div>
+      </div>
+      <div class="step">
+        <div class="check done">✓</div>
+        <div><h4>Machine à sous — v1 fonctionnelle</h4><p><span class="code">SlotMachine_01</span> : boutons Spin / mise réglable, 5 symboles pondérés, gains de x2 à x25, branchée sur les Chips.</p></div>
+      </div>
+      <div class="step">
+        <div class="check blocked">!</div>
+        <div><h4>Connexion Claude Code</h4><p>Serveur MCP <span class="code">robloxstudio-mcp</span> installé et plugin Studio connecté. Accès abonnement actuellement bloqué par l'organisation du compte — à résoudre avant de continuer via l'intégration directe.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="num">06</span>
+      <h2>Prochaines étapes</h2>
+    </div>
+    <div class="box">
+      <ul>
+        <li>Résoudre l'accès Claude Code (compte perso vs organisation)</li>
+        <li>Bloc-out du Hub une fois un premier jeu validé</li>
+        <li>Ajouter Plinko et Crash pour compléter la v1</li>
+        <li>Chiffrer les paliers de fortune pour le déblocage des salles</li>
+        <li>Identité visuelle du casino et des brainrots</li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+<footer>CASINO BRAINROT — DOCUMENT DE CONTEXTE POUR CLAUDE CODE</footer>
+</body>
+</html>
