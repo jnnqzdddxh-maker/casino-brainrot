@@ -12,18 +12,16 @@ local addStroke = UIBuilder.addStroke
 -- "RouletteSpawn" (position/rotation define where the board appears).
 local SPAWN_MARKER_NAME = "RouletteSpawn"
 
--- Roulette gets its own brighter, pink/gold "carnival wheel" palette instead
--- of the dark-navy theme the other games use, to match the reference art
--- style directly (vivid magenta/tan wheel, warm plum background).
+-- Classic casino colors: green felt, true red/black pockets, gold trim.
 local TRIM_COLOR = Theme.Trim
 local TEXT_COLOR = Theme.Text
 local MUTED_COLOR = Theme.Muted
-local BODY_COLOR = Color3.fromRGB(48, 24, 58)
-local SCREEN_COLOR = Color3.fromRGB(35, 16, 44)
-local RED_COLOR = Color3.fromRGB(232, 46, 132) -- "red"/segment A: hot pink
-local BLACK_COLOR = Color3.fromRGB(216, 174, 112) -- "black"/segment B: warm gold-tan
-local GREEN_COLOR = Color3.fromRGB(46, 206, 191) -- zero: bright teal, kept distinct
-local NEUTRAL_COLOR = Color3.fromRGB(90, 58, 104)
+local BODY_COLOR = Color3.fromRGB(19, 46, 32)
+local SCREEN_COLOR = Color3.fromRGB(12, 30, 21)
+local RED_COLOR = Color3.fromRGB(200, 30, 40)
+local BLACK_COLOR = Color3.fromRGB(26, 26, 28)
+local GREEN_COLOR = Color3.fromRGB(30, 130, 75)
+local NEUTRAL_COLOR = Color3.fromRGB(94, 64, 40)
 
 -- A flat table, not a standee: X/Z are the tabletop footprint, Y is table
 -- height. The screen sits on the TOP face, so players look down onto it.

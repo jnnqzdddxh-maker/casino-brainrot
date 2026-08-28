@@ -15,16 +15,16 @@ local addStroke = UIBuilder.addStroke
 -- wheel display, instead of being buried in a table you have to stand over.
 local SPAWN_MARKER_NAME = "RouletteWheelSpawn"
 
--- Matches RouletteBoardBuilder's pink/gold "carnival wheel" palette (the
--- reference art), not the dark-navy theme the other games use.
+-- Classic casino colors, matching RouletteBoardBuilder: green felt, true
+-- red/black pockets, gold trim.
 local TRIM_COLOR = Theme.Trim
 local TEXT_COLOR = Theme.Text
 local MUTED_COLOR = Theme.Muted
-local BODY_COLOR = Color3.fromRGB(48, 24, 58)
-local SCREEN_COLOR = Color3.fromRGB(35, 16, 44)
-local RED_COLOR = Color3.fromRGB(232, 46, 132)
-local BLACK_COLOR = Color3.fromRGB(216, 174, 112)
-local GREEN_COLOR = Color3.fromRGB(46, 206, 191)
+local BODY_COLOR = Color3.fromRGB(19, 46, 32)
+local SCREEN_COLOR = Color3.fromRGB(12, 30, 21)
+local RED_COLOR = Color3.fromRGB(200, 30, 40)
+local BLACK_COLOR = Color3.fromRGB(26, 26, 28)
+local GREEN_COLOR = Color3.fromRGB(30, 130, 75)
 
 local POLE_HEIGHT = 5
 local SIGN_SIZE = Vector3.new(11, 11, 0.7)
