@@ -262,7 +262,10 @@ local function getMarkerCFrame(marker)
 	return nil
 end
 
-local function buildCabinetAt(cframe)
+local function buildCabinetAt(markerCFrame)
+	-- Treat the marker as the cabinet's floor position, not its center.
+	local cframe = markerCFrame * CFrame.new(0, CABINET_SIZE.Y / 2, 0)
+
 	local model = Instance.new("Model")
 	model.Name = "SlotMachineCabinet"
 

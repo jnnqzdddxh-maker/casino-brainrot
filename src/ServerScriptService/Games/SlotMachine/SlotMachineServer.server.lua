@@ -57,8 +57,10 @@ local function spin(bet)
 		payout = bet * bestSymbol.Payout
 		matchType = "triple"
 	elseif bestCount == 2 then
-		payout = math.max(1, math.floor(bet * bestSymbol.Payout * SlotMachineConfig.TwoMatchMultiplier))
 		matchType = "double"
+		if not bestSymbol.DoubleMatchExcluded then
+			payout = math.max(1, math.floor(bet * bestSymbol.Payout * SlotMachineConfig.TwoMatchMultiplier))
+		end
 	end
 
 	local symbolNames = table.create(#reels)

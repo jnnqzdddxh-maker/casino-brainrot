@@ -12,6 +12,7 @@ local player = Players.LocalPlayer
 local GREEN = Color3.fromRGB(63, 217, 160)
 local RED = Color3.fromRGB(255, 93, 108)
 local MUTED = Color3.fromRGB(139, 147, 167)
+local GOLD = Color3.fromRGB(242, 179, 61)
 
 local MIDDLE_ROW = math.ceil(SlotMachineConfig.GridRows / 2)
 
@@ -223,8 +224,18 @@ local function setupCabinet(cabinetModel)
 					playSound("Win")
 				end
 			else
-				resultLabel.Text = "Perdu, retente ta chance !"
-				resultLabel.TextColor3 = RED
+				local counts = {}
+				for _, name in result.symbols do
+					counts[name] = (counts[name] or 0) + 1
+				end
+
+				if counts.Diamond == 2 then
+					resultLabel.Text = "Presque ! Un 💎 de plus pour le JACKPOT !"
+					resultLabel.TextColor3 = GOLD
+				else
+					resultLabel.Text = "Perdu, retente ta chance !"
+					resultLabel.TextColor3 = RED
+				end
 				playSound("Lose")
 			end
 		end
