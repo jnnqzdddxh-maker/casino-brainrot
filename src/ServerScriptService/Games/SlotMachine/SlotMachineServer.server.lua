@@ -29,29 +29,44 @@ local function rollSymbol()
 	return SlotMachineConfig.Symbols[#SlotMachineConfig.Symbols]
 end
 
--- All reels must land on the same symbol to win; payout = bet * that symbol's multiplier.
+-- 3 matching reels pay the symbol's full multiplier; 2 matching reels pay a
+-- reduced multiplier; anything else pays nothing.
 local function spin(bet)
 	local reels = table.create(SlotMachineConfig.ReelCount)
 	for i = 1, SlotMachineConfig.ReelCount do
 		reels[i] = rollSymbol()
 	end
 
-	local allMatch = true
-	for i = 2, #reels do
-		if reels[i].Name ~= reels[1].Name then
-			allMatch = false
-			break
+	local counts = {}
+	for _, symbol in reels do
+		counts[symbol.Name] = (counts[symbol.Name] or 0) + 1
+	end
+
+	local bestSymbol, bestCount = reels[1], 0
+	for _, symbol in reels do
+		local count = counts[symbol.Name]
+		if count > bestCount then
+			bestSymbol, bestCount = symbol, count
 		end
 	end
 
-	local payout = allMatch and (bet * reels[1].Payout) or 0
+	local payout = 0
+	local matchType = "none"
+
+	if bestCount >= SlotMachineConfig.ReelCount then
+		payout = bet * bestSymbol.Payout
+		matchType = "triple"
+	elseif bestCount == 2 then
+		payout = math.max(1, math.floor(bet * bestSymbol.Payout * SlotMachineConfig.TwoMatchMultiplier))
+		matchType = "double"
+	end
 
 	local symbolNames = table.create(#reels)
 	for i, symbol in reels do
 		symbolNames[i] = symbol.Name
 	end
 
-	return symbolNames, payout
+	return symbolNames, payout, matchType
 end
 
 local function onSpinRequested(player, bet)
@@ -67,7 +82,7 @@ local function onSpinRequested(player, bet)
 		return
 	end
 
-	local symbols, payout = spin(bet)
+	local symbols, payout, matchType = spin(bet)
 
 	if payout > 0 then
 		EconomyManager.AddChips(player, payout)
@@ -78,6 +93,7 @@ local function onSpinRequested(player, bet)
 		symbols = symbols,
 		bet = bet,
 		payout = payout,
+		matchType = matchType,
 		balance = EconomyManager.GetBalance(player),
 	})
 end
