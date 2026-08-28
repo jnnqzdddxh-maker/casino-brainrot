@@ -83,16 +83,49 @@ local function buildScreenPanel(screenPart)
 		Parent = panel,
 	})
 
+	local graphArea = create("Frame", {
+		Name = "GraphArea",
+		LayoutOrder = 2,
+		Size = UDim2.new(0, 700, 0, 260),
+		BackgroundColor3 = SCREEN_COLOR,
+		BorderSizePixel = 0,
+		ClipsDescendants = true,
+		Parent = panel,
+	})
+	addCorner(graphArea, 14)
+	addStroke(graphArea, TRIM_COLOR, 0.7)
+
+	create("Frame", {
+		Name = "CurveContainer",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		Parent = graphArea,
+	})
+
 	create("TextLabel", {
 		Name = "MultiplierLabel",
-		LayoutOrder = 2,
-		Size = UDim2.new(0, 700, 0, 160),
+		Position = UDim2.new(0, 16, 0, 10),
+		Size = UDim2.new(0, 320, 0, 64),
 		BackgroundTransparency = 1,
 		Font = Enum.Font.GothamBlack,
 		Text = "1.00x",
 		TextColor3 = TEXT_COLOR,
+		TextXAlignment = Enum.TextXAlignment.Left,
 		TextScaled = true,
-		Parent = panel,
+		Parent = graphArea,
+	})
+
+	create("TextLabel", {
+		Name = "RocketLabel",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0, 20, 1, -20),
+		Rotation = -15,
+		Size = UDim2.new(0, 50, 0, 50),
+		BackgroundTransparency = 1,
+		Font = Enum.Font.SourceSansBold,
+		Text = "🚀",
+		TextScaled = true,
+		Parent = graphArea,
 	})
 
 	create("TextLabel", {

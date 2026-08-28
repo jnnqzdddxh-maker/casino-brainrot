@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 
 local CrashConfig = require(ReplicatedStorage.Shared.CrashConfig)
 
@@ -27,12 +28,18 @@ local ERROR_MESSAGES = {
 local latestUpdate = { phase = "waiting", timeRemaining = CrashConfig.WaitingDuration, multiplier = 1, history = {} }
 local hasActiveBet = false
 local lastBetAmount = 0
+local previousPhase = "waiting"
 
 CrashRoundUpdate.OnClientEvent:Connect(function(data)
-	latestUpdate = data
-	if data.phase == "waiting" then
+	-- Only clear the active-bet flag when a *new* round's waiting phase
+	-- begins (crashed/running -> waiting), not on every waiting broadcast —
+	-- otherwise a bet placed mid-waiting-phase gets forgotten by the time
+	-- the round actually starts, and Cash Out never shows up.
+	if data.phase == "waiting" and previousPhase ~= "waiting" then
 		hasActiveBet = false
 	end
+	previousPhase = data.phase
+	latestUpdate = data
 end)
 
 CrashBetResult.OnClientEvent:Connect(function(result)
@@ -42,6 +49,60 @@ CrashBetResult.OnClientEvent:Connect(function(result)
 		hasActiveBet = false
 	end
 end)
+
+-- Graph: the curve is drawn as short rotated line segments connecting each
+-- new point to the previous one, with the rocket riding the leading edge.
+local GRAPH_MARGIN = 20
+local GRAPH_MAX_TIME = 15 -- seconds of flight to reach the graph's right edge
+local GRAPH_MAX_MULTIPLIER = 10 -- multiplier (log scale) to reach the top edge
+
+local function computeGraphPoint(elapsed, multiplier, graphWidth, graphHeight)
+	local xFraction = math.clamp(elapsed / GRAPH_MAX_TIME, 0, 1)
+	local yFraction = math.clamp(math.log(multiplier) / math.log(GRAPH_MAX_MULTIPLIER), 0, 1)
+
+	local x = GRAPH_MARGIN + xFraction * (graphWidth - GRAPH_MARGIN * 2)
+	local y = (graphHeight - GRAPH_MARGIN) - yFraction * (graphHeight - GRAPH_MARGIN * 2)
+
+	return Vector2.new(x, y)
+end
+
+local function drawSegment(container, p1, p2, color)
+	local diff = p2 - p1
+	local length = diff.Magnitude
+	if length < 0.5 then
+		return
+	end
+
+	local line = Instance.new("Frame")
+	line.AnchorPoint = Vector2.new(0, 0.5)
+	line.Position = UDim2.new(0, p1.X, 0, p1.Y)
+	line.Size = UDim2.new(0, length, 0, 4)
+	line.Rotation = math.deg(math.atan2(diff.Y, diff.X))
+	line.BackgroundColor3 = color
+	line.BorderSizePixel = 0
+	line.Parent = container
+end
+
+local function spawnExplosion(container, point)
+	local label = Instance.new("TextLabel")
+	label.AnchorPoint = Vector2.new(0.5, 0.5)
+	label.Position = UDim2.new(0, point.X, 0, point.Y)
+	label.Size = UDim2.new(0, 60, 0, 60)
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.SourceSansBold
+	label.Text = "💥"
+	label.TextScaled = true
+	label.Parent = container
+
+	local tween = TweenService:Create(label, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {
+		Size = UDim2.new(0, 140, 0, 140),
+		TextTransparency = 1,
+	})
+	tween:Play()
+	tween.Completed:Connect(function()
+		label:Destroy()
+	end)
+end
 
 local function refreshHistory(historyRow)
 	for _, child in historyRow:GetChildren() do
@@ -72,7 +133,10 @@ local function setupBoard(boardModel)
 	local gui = screen:WaitForChild("ScreenGui")
 	local panel = gui:WaitForChild("Panel")
 
-	local multiplierLabel = panel:WaitForChild("MultiplierLabel")
+	local graphArea = panel:WaitForChild("GraphArea")
+	local curveContainer = graphArea:WaitForChild("CurveContainer")
+	local rocketLabel = graphArea:WaitForChild("RocketLabel")
+	local multiplierLabel = graphArea:WaitForChild("MultiplierLabel")
 	local statusLabel = panel:WaitForChild("StatusLabel")
 	local historyRow = panel:WaitForChild("HistoryRow")
 	local betRow = panel:WaitForChild("BetRow")
@@ -132,6 +196,21 @@ local function setupBoard(boardModel)
 		end
 	end)
 
+	local graphWidth = graphArea.Size.X.Offset
+	local graphHeight = graphArea.Size.Y.Offset
+	local startPoint = Vector2.new(GRAPH_MARGIN, graphHeight - GRAPH_MARGIN)
+	local lastPoint = nil
+	local explosionShown = false
+
+	local function resetGraph()
+		for _, child in curveContainer:GetChildren() do
+			child:Destroy()
+		end
+		lastPoint = nil
+		explosionShown = false
+		rocketLabel.Position = UDim2.new(0, startPoint.X, 0, startPoint.Y)
+	end
+
 	task.spawn(function()
 		while boardModel.Parent do
 			local phase = latestUpdate.phase
@@ -144,6 +223,7 @@ local function setupBoard(boardModel)
 				actionButton.Text = hasActiveBet and "MISE PLACÉE" or "MISER"
 				actionButton.Active = not hasActiveBet
 				refreshHistory(historyRow)
+				resetGraph()
 			elseif phase == "running" then
 				local multiplier = latestUpdate.multiplier or 1
 				multiplierLabel.Text = string.format("%.2fx", multiplier)
@@ -157,6 +237,14 @@ local function setupBoard(boardModel)
 					actionButton.Text = "EN COURS"
 					actionButton.Active = false
 				end
+
+				local elapsed = math.log(math.max(multiplier, 1.0001)) / CrashConfig.GrowthRate
+				local point = computeGraphPoint(elapsed, multiplier, graphWidth, graphHeight)
+				if lastPoint then
+					drawSegment(curveContainer, lastPoint, point, multiplier < 2 and GREEN or GOLD)
+				end
+				lastPoint = point
+				rocketLabel.Position = UDim2.new(0, point.X, 0, point.Y)
 			elseif phase == "crashed" then
 				multiplierLabel.Text = string.format("%.2fx", latestUpdate.multiplier or 1)
 				multiplierLabel.TextColor3 = RED
@@ -164,6 +252,11 @@ local function setupBoard(boardModel)
 				statusLabel.TextColor3 = RED
 				actionButton.Text = "..."
 				actionButton.Active = false
+
+				if not explosionShown then
+					explosionShown = true
+					spawnExplosion(curveContainer, lastPoint or startPoint)
+				end
 			end
 
 			task.wait(0.1)
