@@ -19,7 +19,7 @@ local MUTED_COLOR = Theme.Muted
 local BODY_COLOR = Color3.fromRGB(19, 46, 32)
 local SCREEN_COLOR = Color3.fromRGB(12, 30, 21)
 local RED_COLOR = Color3.fromRGB(200, 30, 40)
-local BLACK_COLOR = Color3.fromRGB(26, 26, 28)
+local BLACK_COLOR = Color3.fromRGB(42, 42, 46)
 local GREEN_COLOR = Color3.fromRGB(30, 130, 75)
 local NEUTRAL_COLOR = Color3.fromRGB(94, 64, 40)
 

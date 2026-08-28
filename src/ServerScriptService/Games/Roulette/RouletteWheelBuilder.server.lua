@@ -23,7 +23,7 @@ local MUTED_COLOR = Theme.Muted
 local BODY_COLOR = Color3.fromRGB(19, 46, 32)
 local SCREEN_COLOR = Color3.fromRGB(12, 30, 21)
 local RED_COLOR = Color3.fromRGB(200, 30, 40)
-local BLACK_COLOR = Color3.fromRGB(26, 26, 28)
+local BLACK_COLOR = Color3.fromRGB(42, 42, 46)
 local GREEN_COLOR = Color3.fromRGB(30, 130, 75)
 
 local POLE_HEIGHT = 5
@@ -107,16 +107,19 @@ local function buildScreenPanel(screenPart)
 		Parent = wheelFrame,
 	})
 
-	-- Segments are wide enough to overlap their neighbors at the outer edge
-	-- so the wheel reads as one solid disc instead of a spiky pinwheel with
-	-- visible gaps. The wheel never rotates — only the ball does.
+	-- Segments reach almost all the way to the wheel's own edge (radius 380)
+	-- and are wide enough to overlap their neighbors, so the wheel reads as
+	-- one solid disc filling its circular frame — not a smaller disc with a
+	-- dark ring around it, and not a spiky pinwheel with gaps between
+	-- wedges. The wheel never rotates — only the ball does.
 	local segmentAngle = 360 / #RouletteConfig.WheelOrder
+	local WHEEL_RADIUS = 376
 	for i, number in RouletteConfig.WheelOrder do
 		create("Frame", {
 			Name = "Segment" .. i,
 			AnchorPoint = Vector2.new(0.5, 1),
 			Position = UDim2.fromScale(0.5, 0.5),
-			Size = UDim2.new(0, 78, 0, 372),
+			Size = UDim2.new(0, 92, 0, WHEEL_RADIUS),
 			Rotation = (i - 1) * segmentAngle,
 			BackgroundColor3 = numberColor(number),
 			BorderSizePixel = 0,
@@ -124,17 +127,18 @@ local function buildScreenPanel(screenPart)
 		})
 	end
 
-	-- Thin gold dividers at each pocket boundary, plus the number printed on
-	-- each pocket — big enough to actually read at this size.
+	-- Thin, subtle gold dividers at each pocket boundary — kept faint so the
+	-- colored wedges read as a solid disc rather than a gold sunburst — plus
+	-- the number printed on each pocket.
 	for i, number in RouletteConfig.WheelOrder do
 		create("Frame", {
 			Name = "Divider" .. i,
 			AnchorPoint = Vector2.new(0.5, 1),
 			Position = UDim2.fromScale(0.5, 0.5),
-			Size = UDim2.new(0, 3, 0, 372),
+			Size = UDim2.new(0, 1, 0, WHEEL_RADIUS),
 			Rotation = (i - 1.5) * segmentAngle,
 			BackgroundColor3 = TRIM_COLOR,
-			BackgroundTransparency = 0.25,
+			BackgroundTransparency = 0.6,
 			BorderSizePixel = 0,
 			ZIndex = 2,
 			Parent = spinner,
@@ -144,7 +148,7 @@ local function buildScreenPanel(screenPart)
 			Name = "NumberPivot" .. i,
 			AnchorPoint = Vector2.new(0.5, 1),
 			Position = UDim2.fromScale(0.5, 0.5),
-			Size = UDim2.new(0, 40, 0, 340),
+			Size = UDim2.new(0, 40, 0, WHEEL_RADIUS - 32),
 			Rotation = (i - 1) * segmentAngle,
 			BackgroundTransparency = 1,
 			ZIndex = 2,
