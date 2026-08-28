@@ -17,6 +17,10 @@ SlotMachineConfig.Symbols = {
 -- cosmetic, client-side only.
 SlotMachineConfig.ReelCount = 3
 SlotMachineConfig.GridRows = 3
+-- Pixel height/width of one symbol cell in the reel display. Shared by the
+-- server (cabinet layout) and client (reel scroll animation) so they always
+-- agree on the geometry.
+SlotMachineConfig.CellSize = 100
 SlotMachineConfig.MinBet = 10
 SlotMachineConfig.MaxBet = 500
 SlotMachineConfig.BetStep = 10

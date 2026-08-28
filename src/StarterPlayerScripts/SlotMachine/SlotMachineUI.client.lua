@@ -14,8 +14,6 @@ local RED = Color3.fromRGB(255, 93, 108)
 local MUTED = Color3.fromRGB(139, 147, 167)
 local GOLD = Color3.fromRGB(242, 179, 61)
 
-local MIDDLE_ROW = math.ceil(SlotMachineConfig.GridRows / 2)
-
 local SYMBOL_ICONS = {
 	Cherry = "🍒",
 	Lemon = "🍋",
@@ -34,12 +32,43 @@ for _, symbol in SlotMachineConfig.Symbols do
 	table.insert(allSymbolNames, symbol.Name)
 end
 
-local function randomIcon()
-	return SYMBOL_ICONS[allSymbolNames[math.random(1, #allSymbolNames)]]
+local function randomSymbolName()
+	return allSymbolNames[math.random(1, #allSymbolNames)]
 end
 
 local leaderstats = player:WaitForChild("leaderstats")
 local chips = leaderstats:WaitForChild("Chips")
+
+-- Reel strip: a tall column of stacked symbol labels that slides upward
+-- behind a clipped "window" frame, landing exactly on the target symbol in
+-- the middle slot — the classic sliding slot-machine reel effect.
+local CELL_SIZE = SlotMachineConfig.CellSize
+local FILLER_COUNT = 10
+local STRIP_LENGTH = FILLER_COUNT + 3 -- + top/middle/bottom final trio
+local MIDDLE_INDEX = FILLER_COUNT + 1 -- 0-based index of the middle slot
+local REST_OFFSET = -FILLER_COUNT * CELL_SIZE
+
+local function buildStrip(window, middleSymbolName)
+	local strip = Instance.new("Frame")
+	strip.Name = "Strip"
+	strip.Size = UDim2.new(1, 0, 0, STRIP_LENGTH * CELL_SIZE)
+	strip.Position = UDim2.new(0, 0, 0, 0)
+	strip.BackgroundTransparency = 1
+	strip.Parent = window
+
+	for i = 0, STRIP_LENGTH - 1 do
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, 0, 0, CELL_SIZE)
+		label.Position = UDim2.new(0, 0, 0, i * CELL_SIZE)
+		label.BackgroundTransparency = 1
+		label.Font = Enum.Font.SourceSansBold
+		label.TextScaled = true
+		label.Text = SYMBOL_ICONS[i == MIDDLE_INDEX and middleSymbolName or randomSymbolName()]
+		label.Parent = strip
+	end
+
+	return strip
+end
 
 local function loadSounds(screenPart)
 	local sounds = {}
@@ -100,14 +129,11 @@ local function setupCabinet(cabinetModel)
 	local playSound = loadSounds(screen)
 
 	local reelsFrame = panel:WaitForChild("Reels")
-	local columns = {}
+	local windows = {}
+	local currentStrips = {}
 	for col = 1, SlotMachineConfig.ReelCount do
-		local column = reelsFrame:WaitForChild("Column" .. col)
-		local rows = {}
-		for row = 1, SlotMachineConfig.GridRows do
-			table.insert(rows, column:WaitForChild("Row" .. row):WaitForChild("Symbol"))
-		end
-		table.insert(columns, rows)
+		windows[col] = reelsFrame:WaitForChild("Window" .. col)
+		currentStrips[col] = buildStrip(windows[col], randomSymbolName())
 	end
 
 	local balanceLabel = panel:WaitForChild("Balance")
@@ -183,13 +209,8 @@ local function setupCabinet(cabinetModel)
 
 		local elapsed = 0
 		while not pendingResult and elapsed < 5 do
-			for _, rows in columns do
-				for _, symbolLabel in rows do
-					symbolLabel.Text = randomIcon()
-				end
-			end
-			task.wait(0.08)
-			elapsed += 0.08
+			task.wait(0.05)
+			elapsed += 0.05
 		end
 
 		local result = pendingResult
@@ -202,16 +223,27 @@ local function setupCabinet(cabinetModel)
 			resultLabel.Text = ERROR_MESSAGES[result.error] or "Erreur."
 			resultLabel.TextColor3 = RED
 		else
-			for col, rows in columns do
-				for row, symbolLabel in rows do
-					if row == MIDDLE_ROW then
-						symbolLabel.Text = SYMBOL_ICONS[result.symbols[col]] or "❓"
-					else
-						symbolLabel.Text = randomIcon()
+			local longestDuration = 0
+			for col, window in windows do
+				local oldStrip = currentStrips[col]
+				local strip = buildStrip(window, result.symbols[col])
+				currentStrips[col] = strip
+
+				local duration = 0.9 + (col - 1) * 0.35
+				longestDuration = math.max(longestDuration, duration)
+
+				local tween = TweenService:Create(strip, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					Position = UDim2.new(0, 0, 0, REST_OFFSET),
+				})
+				tween.Completed:Connect(function()
+					if oldStrip then
+						oldStrip:Destroy()
 					end
-				end
-				task.wait(0.15)
+				end)
+				tween:Play()
 			end
+
+			task.wait(longestDuration)
 
 			if result.payout > 0 then
 				resultLabel.Text = ("Gagné ! +%d Chips"):format(result.payout)

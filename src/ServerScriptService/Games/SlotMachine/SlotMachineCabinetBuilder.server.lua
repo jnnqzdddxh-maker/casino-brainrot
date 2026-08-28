@@ -16,7 +16,7 @@ local MUTED_COLOR = Color3.fromRGB(139, 147, 167)
 
 local CABINET_SIZE = Vector3.new(5, 10, 2.5)
 local CANVAS_SIZE = Vector2.new(500, 950)
-local CELL_SIZE = 100
+local CELL_SIZE = SlotMachineConfig.CellSize
 local CELL_GAP = 8
 
 local function create(className, props)
