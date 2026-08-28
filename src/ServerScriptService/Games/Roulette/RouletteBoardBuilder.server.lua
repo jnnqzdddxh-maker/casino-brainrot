@@ -29,8 +29,8 @@ local NEUTRAL_COLOR = Color3.fromRGB(48, 56, 78)
 -- height. The screen sits on the TOP face, so players look down onto it.
 -- The wheel itself lives separately on RouletteWheelBuilder's big sign —
 -- this mat is just the betting layout, so it can stay wide and low.
-local TABLE_SIZE = Vector3.new(11, 3, 9)
-local CANVAS_SIZE = Vector2.new(1100, 820)
+local TABLE_SIZE = Vector3.new(11, 3, 7.6)
+local CANVAS_SIZE = Vector2.new(1100, 740)
 
 local function numberColor(number)
 	local colorName = RouletteConfig.GetColor(number)
@@ -189,6 +189,7 @@ local function buildScreenPanel(screenPart)
 	create("UIListLayout", {
 		FillDirection = Enum.FillDirection.Vertical,
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		VerticalAlignment = Enum.VerticalAlignment.Center,
 		SortOrder = Enum.SortOrder.LayoutOrder,
 		Padding = UDim.new(0, 16),
 		Parent = panel,

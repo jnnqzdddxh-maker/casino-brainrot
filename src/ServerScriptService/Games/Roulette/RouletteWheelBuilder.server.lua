@@ -25,7 +25,7 @@ local GREEN_COLOR = Color3.fromRGB(40, 180, 100)
 
 local POLE_HEIGHT = 5
 local SIGN_SIZE = Vector3.new(11, 11, 0.7)
-local CANVAS_SIZE = Vector2.new(1000, 1000)
+local CANVAS_SIZE = Vector2.new(1000, 1100)
 
 local function numberColor(number)
 	local colorName = RouletteConfig.GetColor(number)
@@ -63,6 +63,7 @@ local function buildScreenPanel(screenPart)
 	create("UIListLayout", {
 		FillDirection = Enum.FillDirection.Vertical,
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		VerticalAlignment = Enum.VerticalAlignment.Center,
 		SortOrder = Enum.SortOrder.LayoutOrder,
 		Padding = UDim.new(0, 12),
 		Parent = panel,

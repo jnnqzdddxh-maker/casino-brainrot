@@ -19,7 +19,7 @@ local TEXT_COLOR = Color3.fromRGB(233, 236, 244)
 local MUTED_COLOR = Color3.fromRGB(139, 147, 167)
 
 local CABINET_SIZE = Vector3.new(5, 10, 2.5)
-local CANVAS_SIZE = Vector2.new(500, 950)
+local CANVAS_SIZE = Vector2.new(500, 780)
 local CELL_SIZE = SlotMachineConfig.CellSize
 local CELL_GAP = 8
 
@@ -54,6 +54,7 @@ local function buildScreenPanel(screenPart)
 	create("UIListLayout", {
 		FillDirection = Enum.FillDirection.Vertical,
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		VerticalAlignment = Enum.VerticalAlignment.Center,
 		SortOrder = Enum.SortOrder.LayoutOrder,
 		Padding = UDim.new(0, 16),
 		Parent = panel,
