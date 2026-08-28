@@ -90,7 +90,8 @@ local function setupBoard(boardModel)
 
 	local wheelRow = panel:WaitForChild("WheelRow")
 	local wheelContainer = wheelRow:WaitForChild("WheelContainer")
-	local spinner = wheelContainer:WaitForChild("WheelFrame"):WaitForChild("Spinner")
+	local wheelFrame = wheelContainer:WaitForChild("WheelFrame")
+	local ballPivot = wheelFrame:WaitForChild("BallPivot")
 	local winningNumberLabel = wheelRow:WaitForChild("WinningNumberLabel")
 	local statusLabel = panel:WaitForChild("StatusLabel")
 	local numbersRow = panel:WaitForChild("NumbersRow")
@@ -218,19 +219,20 @@ local function setupBoard(boardModel)
 		end
 	end)
 
-	-- Wheel spin: rotate the whole segment ring so the winning pocket lands
-	-- under the fixed pointer at the top, always spinning forward from
-	-- wherever it currently rests (never snapping backward).
+	-- Ball spin: the wheel itself never moves — only BallPivot rotates,
+	-- swinging the ball (offset from its center) around the fixed wheel
+	-- until it lands directly over the winning pocket's own angular
+	-- position, always spinning forward from wherever it currently rests.
 	local currentRotation = 0
 
-	local function spinWheelTo(winningNumber)
+	local function spinBallTo(winningNumber)
 		local index = WHEEL_INDEX_BY_NUMBER[winningNumber] or 1
-		local targetMod = -((index - 1) * WHEEL_SEGMENT_ANGLE) % 360
+		local targetMod = ((index - 1) * WHEEL_SEGMENT_ANGLE) % 360
 		local currentMod = currentRotation % 360
 		local delta = (targetMod - currentMod) % 360
-		local newRotation = currentRotation + delta + 6 * 360
+		local newRotation = currentRotation + delta + 8 * 360
 
-		TweenService:Create(spinner, TweenInfo.new(RouletteConfig.SpinDuration, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+		TweenService:Create(ballPivot, TweenInfo.new(RouletteConfig.SpinDuration, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
 			Rotation = newRotation,
 		}):Play()
 
@@ -245,7 +247,7 @@ local function setupBoard(boardModel)
 
 			if phase ~= localPhase then
 				if phase == "spinning" then
-					spinWheelTo(latestUpdate.winningNumber)
+					spinBallTo(latestUpdate.winningNumber)
 				end
 				localPhase = phase
 			end

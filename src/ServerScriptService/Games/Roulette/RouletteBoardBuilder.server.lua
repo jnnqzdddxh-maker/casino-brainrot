@@ -16,14 +16,19 @@ local SCREEN_COLOR = Color3.fromRGB(11, 14, 20)
 local TRIM_COLOR = Color3.fromRGB(242, 179, 61)
 local TEXT_COLOR = Color3.fromRGB(233, 236, 244)
 local MUTED_COLOR = Color3.fromRGB(139, 147, 167)
-local RED_COLOR = Color3.fromRGB(200, 45, 55)
-local BLACK_COLOR = Color3.fromRGB(24, 24, 28)
-local GREEN_COLOR = Color3.fromRGB(45, 165, 95)
+-- Bright/high-contrast on purpose: this is read at a distance and at an
+-- angle on a tabletop, so subtle "authentic" felt tones are too dark to
+-- tell apart. Black cells especially need to stay well clear of the near-
+-- black screen/body colors around them, or they disappear into the panel.
+local RED_COLOR = Color3.fromRGB(230, 35, 50)
+local BLACK_COLOR = Color3.fromRGB(58, 58, 66)
+local GREEN_COLOR = Color3.fromRGB(40, 180, 100)
+local NEUTRAL_COLOR = Color3.fromRGB(48, 56, 78)
 
 -- A flat table, not a standee: X/Z are the tabletop footprint, Y is table
 -- height. The screen sits on the TOP face, so players look down onto it.
-local TABLE_SIZE = Vector3.new(7, 3, 10)
-local CANVAS_SIZE = Vector2.new(800, 1020)
+local TABLE_SIZE = Vector3.new(8, 3, 11)
+local CANVAS_SIZE = Vector2.new(940, 1080)
 
 local function numberColor(number)
 	local colorName = RouletteConfig.GetColor(number)
@@ -39,7 +44,7 @@ local function buildWheel(parent)
 	local wheelRow = create("Frame", {
 		Name = "WheelRow",
 		LayoutOrder = 2,
-		Size = UDim2.new(0, 700, 0, 300),
+		Size = UDim2.new(0, 856, 0, 340),
 		BackgroundTransparency = 1,
 		Parent = parent,
 	})
@@ -55,7 +60,7 @@ local function buildWheel(parent)
 	local wheelContainer = create("Frame", {
 		Name = "WheelContainer",
 		LayoutOrder = 1,
-		Size = UDim2.new(0, 280, 0, 300),
+		Size = UDim2.new(0, 320, 0, 340),
 		BackgroundTransparency = 1,
 		Parent = wheelRow,
 	})
@@ -64,14 +69,14 @@ local function buildWheel(parent)
 		Name = "WheelFrame",
 		AnchorPoint = Vector2.new(0.5, 1),
 		Position = UDim2.new(0.5, 0, 1, 0),
-		Size = UDim2.new(0, 260, 0, 260),
+		Size = UDim2.new(0, 300, 0, 300),
 		BackgroundColor3 = SCREEN_COLOR,
 		BorderSizePixel = 0,
 		ClipsDescendants = true,
 		Parent = wheelContainer,
 	})
-	addCorner(wheelFrame, 130)
-	addStroke(wheelFrame, TRIM_COLOR, 0.3)
+	addCorner(wheelFrame, 150)
+	addStroke(wheelFrame, TRIM_COLOR, 0.15)
 
 	local spinner = create("Frame", {
 		Name = "Spinner",
@@ -83,15 +88,16 @@ local function buildWheel(parent)
 	})
 
 	-- Segments are wide enough to overlap their neighbors at the outer edge
-	-- (chord width for 37 wedges at radius ~124 is ~21px) so the wheel reads
-	-- as one solid disc instead of a spiky pinwheel with visible gaps.
+	-- (chord width for 37 wedges at radius ~144 is ~24px) so the wheel reads
+	-- as one solid disc instead of a spiky pinwheel with visible gaps. The
+	-- wheel itself never rotates — only the ball does (see below).
 	local segmentAngle = 360 / #RouletteConfig.WheelOrder
 	for i, number in RouletteConfig.WheelOrder do
 		create("Frame", {
 			Name = "Segment" .. i,
 			AnchorPoint = Vector2.new(0.5, 1),
 			Position = UDim2.fromScale(0.5, 0.5),
-			Size = UDim2.new(0, 26, 0, 124),
+			Size = UDim2.new(0, 30, 0, 144),
 			Rotation = (i - 1) * segmentAngle,
 			BackgroundColor3 = numberColor(number),
 			BorderSizePixel = 0,
@@ -106,10 +112,10 @@ local function buildWheel(parent)
 			Name = "Divider" .. i,
 			AnchorPoint = Vector2.new(0.5, 1),
 			Position = UDim2.fromScale(0.5, 0.5),
-			Size = UDim2.new(0, 2, 0, 124),
+			Size = UDim2.new(0, 2, 0, 144),
 			Rotation = (i - 1.5) * segmentAngle,
 			BackgroundColor3 = TRIM_COLOR,
-			BackgroundTransparency = 0.4,
+			BackgroundTransparency = 0.25,
 			BorderSizePixel = 0,
 			ZIndex = 2,
 			Parent = spinner,
@@ -120,13 +126,40 @@ local function buildWheel(parent)
 		Name = "Hub",
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.new(0, 34, 0, 34),
+		Size = UDim2.new(0, 38, 0, 38),
 		BackgroundColor3 = TRIM_COLOR,
 		BorderSizePixel = 0,
 		ZIndex = 3,
 		Parent = spinner,
 	})
-	addCorner(hub, 17)
+	addCorner(hub, 19)
+
+	-- The ball: offset from a pivot at the wheel's center, riding near the
+	-- outer rim. Rotating BallPivot (client-side, on spin) swings the ball
+	-- around the fixed wheel and lands it on the winning pocket — the wheel
+	-- itself stays still, like a real roulette wheel.
+	local ballPivot = create("Frame", {
+		Name = "BallPivot",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		ZIndex = 4,
+		Parent = wheelFrame,
+	})
+
+	local ball = create("Frame", {
+		Name = "Ball",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0.5, 0, 0.5, -128),
+		Size = UDim2.new(0, 18, 0, 18),
+		BackgroundColor3 = Color3.fromRGB(248, 248, 252),
+		BorderSizePixel = 0,
+		ZIndex = 4,
+		Parent = ballPivot,
+	})
+	addCorner(ball, 9)
+	addStroke(ball, Color3.new(0, 0, 0), 0.7)
 
 	create("TextLabel", {
 		Name = "Pointer",
@@ -144,7 +177,7 @@ local function buildWheel(parent)
 	create("TextLabel", {
 		Name = "WinningNumberLabel",
 		LayoutOrder = 2,
-		Size = UDim2.new(0, 340, 0, 280),
+		Size = UDim2.new(0, 460, 0, 320),
 		BackgroundTransparency = 1,
 		Font = Enum.Font.GothamBlack,
 		Text = "—",
@@ -158,7 +191,7 @@ local function buildNumberGrid(parent, layoutOrder)
 	local numbersRow = create("Frame", {
 		Name = "NumbersRow",
 		LayoutOrder = layoutOrder,
-		Size = UDim2.new(0, 715, 0, 156),
+		Size = UDim2.new(0, 856, 0, 184),
 		BackgroundTransparency = 1,
 		Parent = parent,
 	})
@@ -174,7 +207,7 @@ local function buildNumberGrid(parent, layoutOrder)
 	local zeroButton = create("TextButton", {
 		Name = "Num0",
 		LayoutOrder = 1,
-		Size = UDim2.new(0, 50, 0, 156),
+		Size = UDim2.new(0, 58, 0, 184),
 		BackgroundColor3 = numberColor(0),
 		BorderSizePixel = 0,
 		Font = Enum.Font.GothamBold,
@@ -185,18 +218,19 @@ local function buildNumberGrid(parent, layoutOrder)
 		Parent = numbersRow,
 	})
 	addCorner(zeroButton, 8)
+	addStroke(zeroButton, TRIM_COLOR, 0.2)
 	UIBuilder.addRaisedLook(zeroButton)
 
 	local numberGrid = create("Frame", {
 		Name = "NumberGrid",
 		LayoutOrder = 2,
-		Size = UDim2.new(0, 657, 0, 156),
+		Size = UDim2.new(0, 788, 0, 184),
 		BackgroundTransparency = 1,
 		Parent = numbersRow,
 	})
 	create("UIGridLayout", {
-		CellSize = UDim2.new(0, 52, 0, 50),
-		CellPadding = UDim2.new(0, 3, 0, 3),
+		CellSize = UDim2.new(0, 62, 0, 60),
+		CellPadding = UDim2.new(0, 4, 0, 4),
 		FillDirection = Enum.FillDirection.Horizontal,
 		FillDirectionMaxCells = 12,
 		SortOrder = Enum.SortOrder.LayoutOrder,
@@ -217,6 +251,7 @@ local function buildNumberGrid(parent, layoutOrder)
 			Parent = numberGrid,
 		})
 		addCorner(button, 6)
+		addStroke(button, TRIM_COLOR, 0.2)
 		UIBuilder.addRaisedLook(button)
 	end
 
@@ -231,7 +266,7 @@ local function buildOutsideBets(parent, layoutOrder)
 	local outsideRow = create("Frame", {
 		Name = "OutsideBetsRow",
 		LayoutOrder = layoutOrder,
-		Size = UDim2.new(0, 700, 0, 50),
+		Size = UDim2.new(0, 808, 0, 56),
 		BackgroundTransparency = 1,
 		Parent = parent,
 	})
@@ -248,7 +283,7 @@ local function buildOutsideBets(parent, layoutOrder)
 		local button = create("TextButton", {
 			Name = name,
 			LayoutOrder = order,
-			Size = UDim2.new(0, 110, 0, 50),
+			Size = UDim2.new(0, 128, 0, 56),
 			BackgroundColor3 = color,
 			BorderSizePixel = 0,
 			Font = Enum.Font.GothamBold,
@@ -259,16 +294,16 @@ local function buildOutsideBets(parent, layoutOrder)
 			Parent = outsideRow,
 		})
 		addCorner(button, 10)
-		addStroke(button, TRIM_COLOR, 0.6)
+		addStroke(button, TRIM_COLOR, 0.3)
 		UIBuilder.addRaisedLook(button)
 	end
 
 	outsideButton("Red", "ROUGE", RED_COLOR, 1)
 	outsideButton("Black", "NOIR", BLACK_COLOR, 2)
-	outsideButton("Even", "PAIR", SCREEN_COLOR, 3)
-	outsideButton("Odd", "IMPAIR", SCREEN_COLOR, 4)
-	outsideButton("Low", "1-18", SCREEN_COLOR, 5)
-	outsideButton("High", "19-36", SCREEN_COLOR, 6)
+	outsideButton("Even", "PAIR", NEUTRAL_COLOR, 3)
+	outsideButton("Odd", "IMPAIR", NEUTRAL_COLOR, 4)
+	outsideButton("Low", "1-18", NEUTRAL_COLOR, 5)
+	outsideButton("High", "19-36", NEUTRAL_COLOR, 6)
 end
 
 local function buildScreenPanel(screenPart)
@@ -307,7 +342,7 @@ local function buildScreenPanel(screenPart)
 	create("TextLabel", {
 		Name = "Title",
 		LayoutOrder = 1,
-		Size = UDim2.new(0, 700, 0, 34),
+		Size = UDim2.new(0, 856, 0, 38),
 		BackgroundTransparency = 1,
 		Font = Enum.Font.GothamBlack,
 		Text = "CASINO BRAINROT — ROULETTE",
@@ -321,7 +356,7 @@ local function buildScreenPanel(screenPart)
 	create("TextLabel", {
 		Name = "StatusLabel",
 		LayoutOrder = 3,
-		Size = UDim2.new(0, 700, 0, 28),
+		Size = UDim2.new(0, 856, 0, 30),
 		BackgroundTransparency = 1,
 		Font = Enum.Font.Gotham,
 		Text = "En attente...",
@@ -338,7 +373,7 @@ local function buildScreenPanel(screenPart)
 	local historyRow = create("Frame", {
 		Name = "HistoryRow",
 		LayoutOrder = 7,
-		Size = UDim2.new(0, 700, 0, 40),
+		Size = UDim2.new(0, 856, 0, 44),
 		BackgroundTransparency = 1,
 		Parent = panel,
 	})
@@ -354,7 +389,7 @@ local function buildScreenPanel(screenPart)
 	create("TextLabel", {
 		Name = "Result",
 		LayoutOrder = 8,
-		Size = UDim2.new(0, 700, 0, 28),
+		Size = UDim2.new(0, 856, 0, 30),
 		BackgroundTransparency = 1,
 		Font = Enum.Font.GothamBold,
 		Text = "",
