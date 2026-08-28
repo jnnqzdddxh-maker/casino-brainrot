@@ -19,27 +19,16 @@ local BLACK_CHIP = Color3.fromRGB(60, 60, 66)
 local ERROR_MESSAGES = {
 	invalid_bet = "Mise invalide.",
 	insufficient_balance = "Solde insuffisant.",
-	already_bet = "Mise déjà placée pour cette manche.",
 	round_in_progress = "Attends le prochain tour.",
 }
 
--- One shared round for the whole server: every board mirrors the same state.
+-- One shared round for the whole server: every board mirrors the same
+-- state. A player can place several bets per round (real roulette rules),
+-- so there's no single "active bet" flag to track anymore.
 local latestUpdate = { phase = "waiting", timeRemaining = RouletteConfig.WaitingDuration, history = {} }
-local hasActiveBet = false
-local previousPhase = "waiting"
 
 RouletteRoundUpdate.OnClientEvent:Connect(function(data)
-	if data.phase == "waiting" and previousPhase ~= "waiting" then
-		hasActiveBet = false
-	end
-	previousPhase = data.phase
 	latestUpdate = data
-end)
-
-RouletteBetResult.OnClientEvent:Connect(function(result)
-	if result.success and result.placed then
-		hasActiveBet = true
-	end
 end)
 
 local function refreshHistory(historyRow)
@@ -130,25 +119,28 @@ local function setupBoard(boardModel)
 	end)
 
 	-- Betting: clicking a number or an outside-bet button immediately places
-	-- that bet at the current stepper amount (one active bet per round).
-	local pendingButton = nil
-	local highlightedButton = nil
+	-- that bet at the current stepper amount. Several bets can be active at
+	-- once (real roulette rules) — pendingButtons is a FIFO queue matched up
+	-- against RouletteBetResult replies, which Roblox delivers in the order
+	-- they were fired, so the Nth reply always corresponds to the Nth click.
+	local pendingButtons = {}
+	local highlightedButtons = {}
 
-	local function clearHighlight()
-		if highlightedButton then
-			local stroke = highlightedButton:FindFirstChild("SelectedStroke")
+	local function clearHighlights()
+		for _, button in highlightedButtons do
+			local stroke = button:FindFirstChild("SelectedStroke")
 			if stroke then
 				stroke:Destroy()
 			end
-			highlightedButton = nil
 		end
+		highlightedButtons = {}
 	end
 
 	local function placeBet(spec, buttonInstance)
-		if latestUpdate.phase ~= "waiting" or hasActiveBet then
+		if latestUpdate.phase ~= "waiting" then
 			return
 		end
-		pendingButton = buttonInstance
+		table.insert(pendingButtons, buttonInstance)
 		RoulettePlaceBet:FireServer(spec, currentBet)
 	end
 
@@ -173,16 +165,16 @@ local function setupBoard(boardModel)
 		if not result.success then
 			resultLabel.Text = ERROR_MESSAGES[result.error] or "Erreur."
 			resultLabel.TextColor3 = RED
-			pendingButton = nil
+			table.remove(pendingButtons, 1)
 		elseif result.placed then
-			if pendingButton then
-				highlightedButton = pendingButton
+			local button = table.remove(pendingButtons, 1)
+			if button and not button:FindFirstChild("SelectedStroke") then
 				local stroke = Instance.new("UIStroke")
 				stroke.Name = "SelectedStroke"
 				stroke.Color = GOLD
 				stroke.Thickness = 4
-				stroke.Parent = highlightedButton
-				pendingButton = nil
+				stroke.Parent = button
+				table.insert(highlightedButtons, button)
 			end
 			resultLabel.Text = ("Mise de %d placée !"):format(result.amount)
 			resultLabel.TextColor3 = GOLD
@@ -207,7 +199,7 @@ local function setupBoard(boardModel)
 			if phase == "waiting" then
 				statusLabel.Text = ("Placez vos mises... %ds"):format(math.ceil(latestUpdate.timeRemaining or 0))
 				statusLabel.TextColor3 = MUTED
-				clearHighlight()
+				clearHighlights()
 				refreshHistory(historyRow)
 			elseif phase == "spinning" then
 				statusLabel.Text = "La roue tourne..."

@@ -15,8 +15,9 @@ local VALID_COLORS = { red = true, black = true }
 local VALID_PARITIES = { even = true, odd = true }
 local VALID_RANGES = { low = true, high = true }
 
--- One shared round for the whole server. `bets` maps Player -> { type,
--- value, amount }. Only one active bet per player per round.
+-- One shared round for the whole server. `bets` maps Player -> an array of
+-- { type, value, amount } — a player can place several bets in one round,
+-- same as a real roulette table.
 local round = {
 	phase = "waiting", -- "waiting" | "spinning" | "result"
 	bets = {},
@@ -94,11 +95,6 @@ local function onPlaceBet(player, bet, amount)
 		return
 	end
 
-	if round.bets[player] then
-		RouletteBetResult:FireClient(player, { success = false, error = "already_bet" })
-		return
-	end
-
 	amount = math.floor(amount)
 
 	if not EconomyManager.TrySpend(player, amount) then
@@ -106,7 +102,9 @@ local function onPlaceBet(player, bet, amount)
 		return
 	end
 
-	round.bets[player] = { type = bet.type, value = bet.value, amount = amount }
+	round.bets[player] = round.bets[player] or {}
+	table.insert(round.bets[player], { type = bet.type, value = bet.value, amount = amount })
+
 	RouletteBetResult:FireClient(player, { success = true, placed = true, type = bet.type, value = bet.value, amount = amount })
 end
 
@@ -131,15 +129,20 @@ local function runRound()
 
 	round.phase = "result"
 
-	for player, bet in round.bets do
-		local payout = resolveBet(bet, winningNumber)
-		if payout > 0 then
-			EconomyManager.AddChips(player, payout)
+	for player, bets in round.bets do
+		local totalPayout = 0
+		for _, bet in bets do
+			totalPayout += resolveBet(bet, winningNumber)
 		end
+
+		if totalPayout > 0 then
+			EconomyManager.AddChips(player, totalPayout)
+		end
+
 		RouletteBetResult:FireClient(player, {
 			success = true,
 			resolved = true,
-			payout = payout,
+			payout = totalPayout,
 			winningNumber = winningNumber,
 			winningColor = winningColor,
 		})
