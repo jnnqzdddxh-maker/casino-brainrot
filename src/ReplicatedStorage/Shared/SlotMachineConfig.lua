@@ -16,7 +16,7 @@ SlotMachineConfig.Symbols = {
 SlotMachineConfig.ReelCount = 3
 SlotMachineConfig.GridRows = 3
 SlotMachineConfig.MinBet = 10
-SlotMachineConfig.MaxBet = 1000
+SlotMachineConfig.MaxBet = 500
 SlotMachineConfig.BetStep = 10
 
 -- Fraction of a symbol's Payout awarded when only 2 of the 3 reels match
