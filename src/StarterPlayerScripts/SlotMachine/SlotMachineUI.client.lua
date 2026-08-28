@@ -5,12 +5,15 @@ local TweenService = game:GetService("TweenService")
 
 local SlotMachineClient = require(script.Parent.SlotMachineClient)
 local SlotMachineConfig = require(ReplicatedStorage.Shared.SlotMachineConfig)
+local SlotMachineSounds = require(ReplicatedStorage.Shared.SlotMachineSounds)
 
 local player = Players.LocalPlayer
 
 local GREEN = Color3.fromRGB(63, 217, 160)
 local RED = Color3.fromRGB(255, 93, 108)
 local MUTED = Color3.fromRGB(139, 147, 167)
+
+local MIDDLE_ROW = math.ceil(SlotMachineConfig.GridRows / 2)
 
 local SYMBOL_ICONS = {
 	Cherry = "🍒",
@@ -30,8 +33,29 @@ for _, symbol in SlotMachineConfig.Symbols do
 	table.insert(allSymbolNames, symbol.Name)
 end
 
+local function randomIcon()
+	return SYMBOL_ICONS[allSymbolNames[math.random(1, #allSymbolNames)]]
+end
+
 local leaderstats = player:WaitForChild("leaderstats")
 local chips = leaderstats:WaitForChild("Chips")
+
+local function loadSounds(screenPart)
+	local sounds = {}
+	for name, soundId in SlotMachineSounds do
+		sounds[name] = Instance.new("Sound")
+		sounds[name].Name = name
+		sounds[name].SoundId = soundId
+		sounds[name].Parent = screenPart
+	end
+
+	return function(name)
+		local sound = sounds[name]
+		if sound and sound.SoundId ~= "" and sound.SoundId ~= "rbxassetid://0" then
+			sound:Play()
+		end
+	end
+end
 
 local function showFloatingWin(screenPart, amount)
 	local anchor = Instance.new("Part")
@@ -39,11 +63,11 @@ local function showFloatingWin(screenPart, amount)
 	anchor.Transparency = 1
 	anchor.Anchored = true
 	anchor.CanCollide = false
-	anchor.CFrame = screenPart.CFrame * CFrame.new(0, 1.8, 0)
+	anchor.CFrame = screenPart.CFrame * CFrame.new(0, 2.2, 0)
 	anchor.Parent = screenPart
 
 	local billboard = Instance.new("BillboardGui")
-	billboard.Size = UDim2.new(0, 140, 0, 44)
+	billboard.Size = UDim2.new(0, 160, 0, 50)
 	billboard.AlwaysOnTop = true
 	billboard.Parent = anchor
 
@@ -72,11 +96,17 @@ local function setupCabinet(cabinetModel)
 	local screen = cabinetModel:WaitForChild("Screen")
 	local gui = screen:WaitForChild("ScreenGui")
 	local panel = gui:WaitForChild("Panel")
+	local playSound = loadSounds(screen)
 
 	local reelsFrame = panel:WaitForChild("Reels")
-	local reelLabels = {}
-	for i = 1, SlotMachineConfig.ReelCount do
-		table.insert(reelLabels, reelsFrame:WaitForChild("Reel" .. i):WaitForChild("Symbol"))
+	local columns = {}
+	for col = 1, SlotMachineConfig.ReelCount do
+		local column = reelsFrame:WaitForChild("Column" .. col)
+		local rows = {}
+		for row = 1, SlotMachineConfig.GridRows do
+			table.insert(rows, column:WaitForChild("Row" .. row):WaitForChild("Symbol"))
+		end
+		table.insert(columns, rows)
 	end
 
 	local balanceLabel = panel:WaitForChild("Balance")
@@ -99,11 +129,13 @@ local function setupCabinet(cabinetModel)
 	end
 
 	minusButton.MouseButton1Click:Connect(function()
+		playSound("ButtonClick")
 		currentBet = math.max(SlotMachineConfig.MinBet, currentBet - SlotMachineConfig.BetStep)
 		refreshBetLabel()
 	end)
 
 	plusButton.MouseButton1Click:Connect(function()
+		playSound("ButtonClick")
 		currentBet = math.min(SlotMachineConfig.MaxBet, currentBet + SlotMachineConfig.BetStep)
 		refreshBetLabel()
 	end)
@@ -122,6 +154,8 @@ local function setupCabinet(cabinetModel)
 		if spinning then
 			return
 		end
+		playSound("ButtonClick")
+
 		spinning = true
 		waitingForThisCabinet = true
 		pendingResult = nil
@@ -134,8 +168,10 @@ local function setupCabinet(cabinetModel)
 
 		local elapsed = 0
 		while not pendingResult and elapsed < 5 do
-			for _, reelLabel in reelLabels do
-				reelLabel.Text = SYMBOL_ICONS[allSymbolNames[math.random(1, #allSymbolNames)]]
+			for _, rows in columns do
+				for _, symbolLabel in rows do
+					symbolLabel.Text = randomIcon()
+				end
 			end
 			task.wait(0.08)
 			elapsed += 0.08
@@ -151,8 +187,14 @@ local function setupCabinet(cabinetModel)
 			resultLabel.Text = ERROR_MESSAGES[result.error] or "Erreur."
 			resultLabel.TextColor3 = RED
 		else
-			for i, reelLabel in reelLabels do
-				reelLabel.Text = SYMBOL_ICONS[result.symbols[i]] or "❓"
+			for col, rows in columns do
+				for row, symbolLabel in rows do
+					if row == MIDDLE_ROW then
+						symbolLabel.Text = SYMBOL_ICONS[result.symbols[col]] or "❓"
+					else
+						symbolLabel.Text = randomIcon()
+					end
+				end
 				task.wait(0.15)
 			end
 
@@ -160,9 +202,16 @@ local function setupCabinet(cabinetModel)
 				resultLabel.Text = ("Gagné ! +%d Chips"):format(result.payout)
 				resultLabel.TextColor3 = GREEN
 				showFloatingWin(screen, result.payout)
+
+				if result.matchType == "triple" and result.symbols[1] == "Diamond" then
+					playSound("Jackpot")
+				else
+					playSound("Win")
+				end
 			else
 				resultLabel.Text = "Perdu, retente ta chance !"
 				resultLabel.TextColor3 = RED
+				playSound("Lose")
 			end
 		end
 

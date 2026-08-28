@@ -10,7 +10,11 @@ SlotMachineConfig.Symbols = {
 	{ Name = "Diamond", Weight = 4, Payout = 25 },
 }
 
+-- The machine displays a 3x3 grid (GridRows symbols per reel) but only the
+-- middle row is the actual payline the server evaluates; top/bottom rows are
+-- cosmetic, client-side only.
 SlotMachineConfig.ReelCount = 3
+SlotMachineConfig.GridRows = 3
 SlotMachineConfig.MinBet = 10
 SlotMachineConfig.MaxBet = 1000
 SlotMachineConfig.BetStep = 10

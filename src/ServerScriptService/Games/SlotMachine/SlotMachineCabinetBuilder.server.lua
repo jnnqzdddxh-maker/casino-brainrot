@@ -14,8 +14,10 @@ local TRIM_COLOR = Color3.fromRGB(242, 179, 61) -- gold
 local TEXT_COLOR = Color3.fromRGB(233, 236, 244)
 local MUTED_COLOR = Color3.fromRGB(139, 147, 167)
 
-local CABINET_SIZE = Vector3.new(3, 6, 2)
-local CANVAS_SIZE = Vector2.new(400, 700)
+local CABINET_SIZE = Vector3.new(5, 10, 2.5)
+local CANVAS_SIZE = Vector2.new(460, 920)
+local CELL_SIZE = 100
+local CELL_GAP = 8
 
 local function create(className, props)
 	local instance = Instance.new(className)
@@ -93,10 +95,13 @@ local function buildScreenPanel(screenPart)
 		Parent = panel,
 	})
 
+	local gridWidth = SlotMachineConfig.ReelCount * CELL_SIZE + (SlotMachineConfig.ReelCount - 1) * CELL_GAP
+	local gridHeight = SlotMachineConfig.GridRows * CELL_SIZE + (SlotMachineConfig.GridRows - 1) * CELL_GAP
+
 	local reelsFrame = create("Frame", {
 		Name = "Reels",
 		LayoutOrder = 3,
-		Size = UDim2.new(0, 352, 0, 130),
+		Size = UDim2.new(0, gridWidth, 0, gridHeight),
 		BackgroundTransparency = 1,
 		Parent = panel,
 	})
@@ -106,31 +111,52 @@ local function buildScreenPanel(screenPart)
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
 		VerticalAlignment = Enum.VerticalAlignment.Center,
 		SortOrder = Enum.SortOrder.LayoutOrder,
-		Padding = UDim.new(0, 12),
+		Padding = UDim.new(0, CELL_GAP),
 		Parent = reelsFrame,
 	})
 
-	for i = 1, SlotMachineConfig.ReelCount do
-		local reelSlot = create("Frame", {
-			Name = "Reel" .. i,
-			LayoutOrder = i,
-			Size = UDim2.new(0, 108, 0, 130),
-			BackgroundColor3 = SCREEN_COLOR,
-			BorderSizePixel = 0,
+	-- Each reel is a column of GridRows symbols. Only the middle row is the
+	-- real (server-authoritative) payline; the rest is visual flavor.
+	for col = 1, SlotMachineConfig.ReelCount do
+		local column = create("Frame", {
+			Name = "Column" .. col,
+			LayoutOrder = col,
+			Size = UDim2.new(0, CELL_SIZE, 0, gridHeight),
+			BackgroundTransparency = 1,
 			Parent = reelsFrame,
 		})
-		addCorner(reelSlot, 12)
-		addStroke(reelSlot, TRIM_COLOR, 0.7)
 
-		create("TextLabel", {
-			Name = "Symbol",
-			Size = UDim2.fromScale(1, 1),
-			BackgroundTransparency = 1,
-			Font = Enum.Font.SourceSansBold,
-			Text = "🍒",
-			TextScaled = true,
-			Parent = reelSlot,
+		create("UIListLayout", {
+			FillDirection = Enum.FillDirection.Vertical,
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+			VerticalAlignment = Enum.VerticalAlignment.Center,
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			Padding = UDim.new(0, CELL_GAP),
+			Parent = column,
 		})
+
+		for row = 1, SlotMachineConfig.GridRows do
+			local cell = create("Frame", {
+				Name = "Row" .. row,
+				LayoutOrder = row,
+				Size = UDim2.new(0, CELL_SIZE, 0, CELL_SIZE),
+				BackgroundColor3 = SCREEN_COLOR,
+				BorderSizePixel = 0,
+				Parent = column,
+			})
+			addCorner(cell, 12)
+			addStroke(cell, TRIM_COLOR, 0.7)
+
+			create("TextLabel", {
+				Name = "Symbol",
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				Font = Enum.Font.SourceSansBold,
+				Text = "🍒",
+				TextScaled = true,
+				Parent = cell,
+			})
+		end
 	end
 
 	create("TextLabel", {
