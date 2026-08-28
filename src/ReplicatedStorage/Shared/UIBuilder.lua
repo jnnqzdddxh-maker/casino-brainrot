@@ -1,4 +1,7 @@
 local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Theme = require(ReplicatedStorage.Shared.Theme)
 
 local UIBuilder = {}
 
@@ -70,9 +73,9 @@ function UIBuilder.addRaisedLook(button)
 	})
 end
 
-local SCREEN_COLOR = Color3.fromRGB(11, 14, 20)
-local TRIM_COLOR = Color3.fromRGB(242, 179, 61)
-local TEXT_COLOR = Color3.fromRGB(233, 236, 244)
+local SCREEN_COLOR = Theme.Screen
+local TRIM_COLOR = Theme.Trim
+local TEXT_COLOR = Theme.Text
 
 local function quickButton(parent, name, text, layoutOrder)
 	local button = UIBuilder.create("TextButton", {

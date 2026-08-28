@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local UIBuilder = require(ReplicatedStorage.Shared.UIBuilder)
 local RouletteConfig = require(ReplicatedStorage.Shared.RouletteConfig)
+local Theme = require(ReplicatedStorage.Shared.Theme)
 local create = UIBuilder.create
 local addCorner = UIBuilder.addCorner
 local addStroke = UIBuilder.addStroke
@@ -11,19 +12,15 @@ local addStroke = UIBuilder.addStroke
 -- "RouletteSpawn" (position/rotation define where the board appears).
 local SPAWN_MARKER_NAME = "RouletteSpawn"
 
-local BODY_COLOR = Color3.fromRGB(19, 24, 38)
-local SCREEN_COLOR = Color3.fromRGB(11, 14, 20)
-local TRIM_COLOR = Color3.fromRGB(242, 179, 61)
-local TEXT_COLOR = Color3.fromRGB(233, 236, 244)
-local MUTED_COLOR = Color3.fromRGB(139, 147, 167)
--- Bright/high-contrast on purpose: this is read at a distance and at an
--- angle on a tabletop, so subtle "authentic" felt tones are too dark to
--- tell apart. Black cells especially need to stay well clear of the near-
--- black screen/body colors around them, or they disappear into the panel.
-local RED_COLOR = Color3.fromRGB(230, 35, 50)
-local BLACK_COLOR = Color3.fromRGB(58, 58, 66)
-local GREEN_COLOR = Color3.fromRGB(40, 180, 100)
-local NEUTRAL_COLOR = Color3.fromRGB(48, 56, 78)
+local BODY_COLOR = Theme.Body
+local SCREEN_COLOR = Theme.Screen
+local TRIM_COLOR = Theme.Trim
+local TEXT_COLOR = Theme.Text
+local MUTED_COLOR = Theme.Muted
+local RED_COLOR = Theme.Red
+local BLACK_COLOR = Theme.RouletteBlack
+local GREEN_COLOR = Theme.Green
+local NEUTRAL_COLOR = Theme.Neutral
 
 -- A flat table, not a standee: X/Z are the tabletop footprint, Y is table
 -- height. The screen sits on the TOP face, so players look down onto it.

@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local UIBuilder = require(ReplicatedStorage.Shared.UIBuilder)
 local CrashConfig = require(ReplicatedStorage.Shared.CrashConfig)
+local Theme = require(ReplicatedStorage.Shared.Theme)
 local create = UIBuilder.create
 local addCorner = UIBuilder.addCorner
 local addStroke = UIBuilder.addStroke
@@ -11,11 +12,11 @@ local addStroke = UIBuilder.addStroke
 -- "CrashSpawn" (position/rotation define where the board appears).
 local SPAWN_MARKER_NAME = "CrashSpawn"
 
-local BODY_COLOR = Color3.fromRGB(19, 24, 38)
-local SCREEN_COLOR = Color3.fromRGB(11, 14, 20)
-local TRIM_COLOR = Color3.fromRGB(242, 179, 61)
-local TEXT_COLOR = Color3.fromRGB(233, 236, 244)
-local MUTED_COLOR = Color3.fromRGB(139, 147, 167)
+local BODY_COLOR = Theme.Body
+local SCREEN_COLOR = Theme.Screen
+local TRIM_COLOR = Theme.Trim
+local TEXT_COLOR = Theme.Text
+local MUTED_COLOR = Theme.Muted
 
 local BOARD_SIZE = Vector3.new(10, 7, 0.6)
 local CANVAS_SIZE = Vector2.new(900, 800)

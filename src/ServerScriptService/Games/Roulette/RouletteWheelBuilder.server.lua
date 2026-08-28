@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local UIBuilder = require(ReplicatedStorage.Shared.UIBuilder)
 local RouletteConfig = require(ReplicatedStorage.Shared.RouletteConfig)
+local Theme = require(ReplicatedStorage.Shared.Theme)
 local create = UIBuilder.create
 local addCorner = UIBuilder.addCorner
 local addStroke = UIBuilder.addStroke
@@ -14,14 +15,14 @@ local addStroke = UIBuilder.addStroke
 -- wheel display, instead of being buried in a table you have to stand over.
 local SPAWN_MARKER_NAME = "RouletteWheelSpawn"
 
-local BODY_COLOR = Color3.fromRGB(19, 24, 38)
-local SCREEN_COLOR = Color3.fromRGB(11, 14, 20)
-local TRIM_COLOR = Color3.fromRGB(242, 179, 61)
-local TEXT_COLOR = Color3.fromRGB(233, 236, 244)
-local MUTED_COLOR = Color3.fromRGB(139, 147, 167)
-local RED_COLOR = Color3.fromRGB(230, 35, 50)
-local BLACK_COLOR = Color3.fromRGB(58, 58, 66)
-local GREEN_COLOR = Color3.fromRGB(40, 180, 100)
+local BODY_COLOR = Theme.Body
+local SCREEN_COLOR = Theme.Screen
+local TRIM_COLOR = Theme.Trim
+local TEXT_COLOR = Theme.Text
+local MUTED_COLOR = Theme.Muted
+local RED_COLOR = Theme.Red
+local BLACK_COLOR = Theme.RouletteBlack
+local GREEN_COLOR = Theme.Green
 
 local POLE_HEIGHT = 5
 local SIGN_SIZE = Vector3.new(11, 11, 0.7)
@@ -147,11 +148,15 @@ local function buildScreenPanel(screenPart)
 			ZIndex = 2,
 			Parent = spinner,
 		})
+		-- Cancel out the pivot's own rotation so every number renders upright
+		-- and horizontal, regardless of where it sits around the wheel —
+		-- rotating it to match the pivot (as a real wheel's paint would)
+		-- reads as illegible/upside-down for anything past the very top.
 		create("TextLabel", {
 			AnchorPoint = Vector2.new(0.5, 0),
 			Position = UDim2.new(0.5, 0, 0, 6),
 			Size = UDim2.new(1, 0, 0, 34),
-			Rotation = 180,
+			Rotation = -((i - 1) * segmentAngle),
 			BackgroundTransparency = 1,
 			Font = Enum.Font.GothamBold,
 			Text = tostring(number),
